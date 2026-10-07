@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html class="h-full" lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+  <title>CampusRoute - Student Task & Errand Optimizer</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet"/>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#3525cd",
+            "primary-container": "#4f46e5",
+            "primary-fixed": "#e2dfff",
+            "on-primary-fixed-variant": "#3323cc",
+            "secondary": "#904d00",
+            "secondary-container": "#fe932c",
+            "secondary-fixed": "#ffdcc3",
+            "on-secondary-fixed": "#2f1500",
+            "tertiary": "#005338",
+            "tertiary-container": "#006e4c",
+            "tertiary-fixed": "#85f8c4",
+            "tertiary-fixed-dim": "#68dba9",
+            "surface": "#faf8ff",
+            "on-surface": "#131b2e",
+            "on-surface-variant": "#464555",
+            "surface-container-low": "#f2f3ff",
+            "surface-container": "#eaedff",
+            "surface-container-high": "#e2e7ff",
+            "surface-container-highest": "#dae2fd",
+            "surface-container-lowest": "#ffffff",
+            "outline": "#777587",
+            "outline-variant": "#c7c4d8",
+            "error": "#ba1a1a",
+            "error-container": "#ffdad6"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    @layer base {
+      html, body { width: 100vw; margin: 0; padding: 0; }
+      body { overscroll-behavior-y: none; min-height: 100vh; }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+    }
+    ::-webkit-scrollbar { display: none; }
+    .screen-container { display: none; }
+    .screen-container.active { display: flex; flex-direction: column; }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased flex flex-col min-h-screen">
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+    <div class="h-16 px-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="h-8 w-8 rounded-lg shadow-sm" fill="none">
+          <rect width="120" height="120" rx="28" fill="#4F46E5"/>
+          <path d="M32 88C32 88 44 72 60 72C76 72 88 56 88 32" stroke="#A5B4FC" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 12"/>
+          <circle cx="34" cy="86" r="10" fill="#10B981" stroke="#FFFFFF" stroke-width="4"/>
+          <circle cx="88" cy="34" r="10" fill="#F59E0B" stroke="#FFFFFF" stroke-width="4"/>
+          <path d="M54 44L66 32L78 44" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="flex flex-col">
+          <span class="text-[17px] font-bold text-on-surface leading-none tracking-tight">CampusRoute</span>
+          <span id="screen-subtitle" class="text-[11px] text-on-surface-variant leading-none mt-0.5">Aufgaben & JSON Data</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-surface-container-high text-primary">FH Technikum</span>
+        <button class="w-9 h-9 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs ring-2 ring-primary/20">
+          OM
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== SCREEN 1: ERRANDS DASHBOARD (LÄDT JSON) ==================== -->
+  <main id="screen-errands" class="screen-container active flex-1 w-full pt-16 pb-24 bg-surface">
+    <div class="flex flex-col w-full pb-6 px-4">
+      
+      <!-- Welcome Header -->
+      <section class="flex flex-col gap-2 pt-3 pb-2">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex flex-col min-w-0">
+            <span class="text-xs text-on-surface-variant">Donnerstag • Semester 3</span>
+            <h1 class="text-2xl font-bold text-on-surface tracking-tight mt-0.5">
+              Hey Omar, <span id="open-task-count" class="text-primary-container">...</span> Aufgaben geladen
+            </h1>
+          </div>
+          <button aria-label="Add Errand" class="w-10 h-10 rounded-xl bg-surface-container-high text-primary flex items-center justify-center shadow-sm active:scale-95 transition-transform">
+            <span class="material-symbols-outlined text-[22px]">add_circle</span>
+          </button>
+        </div>
+        
+        <div class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-low text-on-surface-variant w-fit shadow-sm text-xs">
+          <span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
+          <span class="material-symbols-outlined text-[16px] text-tertiary-container">near_me</span>
+          <span class="font-semibold text-on-surface">Campus Bibliothek</span>
+          <span>• Frei bis 13:45</span>
+        </div>
+      </section>
+
+      <!-- KPI Metrics Ribbon -->
+      <section class="grid grid-cols-3 gap-2.5 my-2">
+        <div class="flex flex-col p-2.5 bg-surface-container-lowest rounded-xl shadow-sm justify-between">
+          <div class="flex items-center justify-between text-outline">
+            <span class="text-[11px] font-semibold">Gespart</span>
+            <span class="material-symbols-outlined text-[16px] text-tertiary-container">timer</span>
+          </div>
+          <div class="mt-1">
+            <span class="text-lg font-bold text-on-surface">35 <span class="text-[11px] font-normal text-on-surface-variant">min</span></span>
+          </div>
+          <div class="flex items-center gap-0.5 mt-1">
+            <span class="material-symbols-outlined text-[14px] text-tertiary-container">trending_up</span>
+            <span class="text-[10px] text-tertiary-container font-semibold leading-none">+12% opt</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col p-2.5 bg-surface-container-lowest rounded-xl shadow-sm justify-between">
+          <div class="flex items-center justify-between text-outline">
+            <span class="text-[11px] font-semibold">Effizienz</span>
+            <span class="material-symbols-outlined text-[16px] text-secondary-container">bolt</span>
+          </div>
+          <div class="mt-1">
+            <span class="text-lg font-bold text-on-surface">92%</span>
+          </div>
+          <div class="flex items-center gap-0.5 mt-1">
+            <span class="text-[10px] text-on-surface-variant font-medium">Smart Loop</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col p-2.5 bg-surface-container-lowest rounded-xl shadow-sm justify-between">
+          <div class="flex items-center justify-between text-outline">
+            <span class="text-[11px] font-semibold">Geladen</span>
+            <span class="material-symbols-outlined text-[16px] text-primary">data_object</span>
+          </div>
+          <div class="mt-1">
+            <span id="json-record-count" class="text-lg font-bold text-primary">0</span>
+          </div>
+          <div class="flex items-center gap-0.5 mt-1">
+            <span class="text-[10px] text-on-surface-variant truncate">campus_tasks.json</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Errand Cards Container (Dynamisch aus JSON befüllt) -->
+      <section class="mt-3 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-bold text-on-surface">Importierte JSON-Aufgaben</h2>
+            <span id="badge-total-tasks" class="text-xs px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-bold">Laden...</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2.5 mt-1" id="json-task-container">
+          <!-- Dynamischer Inhalt aus campus_tasks.json wird hier per JS eingefügt -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ==================== SCREEN 2: TASK DETAILS ==================== -->
+  <main id="screen-details" class="screen-container flex-1 w-full pt-16 pb-28 bg-surface">
+    <div class="flex flex-col w-full pb-10">
+      <div class="px-4 pt-3 pb-3 bg-surface-container-low flex flex-col gap-2 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[11px] font-semibold">AUFGABENDETAIL</span>
+          <span class="text-xs text-on-surface-variant font-mono" id="detail-task-id">ID: #---</span>
+        </div>
+        <h2 id="detail-title" class="text-lg font-bold text-on-surface">Keine Aufgabe ausgewählt</h2>
+      </div>
+
+      <div class="px-4 flex flex-col gap-3 mt-3">
+        <div class="bg-surface-container-lowest rounded-xl p-3.5 shadow-sm flex flex-col gap-2">
+          <span class="text-xs text-on-surface-variant font-semibold">Beschreibung</span>
+          <p id="detail-desc" class="text-sm text-on-surface">—</p>
+          <div class="flex justify-between items-center pt-2 border-t border-surface-container-high text-xs text-on-surface-variant">
+            <span>Koordinaten:</span>
+            <span id="detail-coords" class="font-mono text-primary font-semibold">—</span>
+          </div>
+          <div class="flex justify-between items-center text-xs text-on-surface-variant">
+            <span>Angehängte Datei:</span>
+            <span id="detail-file" class="font-semibold text-secondary">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fixed bottom-16 left-0 right-0 z-40 bg-surface/95 backdrop-blur-xl p-3 border-t border-surface-container-high flex gap-2">
+        <button class="flex-1 h-11 bg-primary text-on-primary rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md" onclick="switchScreen('errands')">
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          <span>Zurück zur Übersicht</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== SCREEN 3: MAP ==================== -->
+  <main id="screen-map" class="screen-container flex-1 w-full pt-16 pb-20 bg-surface">
+    <div class="relative w-full h-[calc(100vh-140px)] min-h-[560px] overflow-hidden bg-surface-container-low flex flex-col items-center justify-center p-6 text-center">
+      <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
+        <span class="material-symbols-outlined text-[32px]">map</span>
+      </div>
+      <h2 class="text-base font-bold text-on-surface">Campus-Kartenansicht</h2>
+      <p class="text-xs text-on-surface-variant max-w-xs mt-1">
+        Koordinaten aus der <code>campus_tasks.json</code> werden hier mit Startpunkt Bibliothek gerendert.
+      </p>
+      <button class="mt-4 px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold" onclick="switchScreen('errands')">
+        Zu den Datensätzen
+      </button>
+    </div>
+  </main>
+
+  <!-- ==================== BOTTOM NAV ==================== -->
+  <nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/80 backdrop-blur-xl border-t border-surface-container-high shadow-[0_-2px_12px_rgba(0,0,0,0.05)]">
+    <div class="flex justify-around items-center h-16 px-2">
+      <button onclick="switchScreen('map')" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-primary transition-colors py-1" data-target="map">
+        <span class="material-symbols-outlined text-[22px]">map</span>
+        <span class="text-[11px] font-medium">Karte</span>
+      </button>
+
+      <button onclick="switchScreen('errands')" class="nav-tab active flex flex-col items-center justify-center gap-0.5 text-primary font-bold transition-colors py-1" data-target="errands">
+        <div class="relative">
+          <span class="material-symbols-outlined text-[22px]">checklist_rtl</span>
+          <span id="nav-badge-count" class="absolute -top-1 -right-2 w-4 h-4 bg-secondary-container text-on-secondary flex items-center justify-center rounded-full text-[9px] font-bold">0</span>
+        </div>
+        <span class="text-[11px]">Aufgaben</span>
+      </button>
+
+      <button onclick="switchScreen('details')" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-primary transition-colors py-1" data-target="details">
+        <span class="material-symbols-outlined text-[22px]">receipt_long</span>
+        <span class="text-[11px] font-medium">Details</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==================== JAVASCRIPT: JSON FETCH & RENDER ==================== -->
+  <script>
+    let globalTasks = [];
+
+    // Liest die Datei campus_tasks.json ein und rendert sie
+    async function initDataset() {
+      const container = document.getElementById('json-task-container');
+      try {
+        const response = await fetch('./campus_tasks.json');
+        if (!response.ok) throw new Error('HTTP Status ' + response.status + ' beim Laden der JSON-Datei');
+        
+        globalTasks = await response.json();
+
+        // Statistiken aktualisieren
+        document.getElementById('json-record-count').innerText = globalTasks.length;
+        document.getElementById('badge-total-tasks').innerText = globalTasks.length + ' Aufgaben';
+        document.getElementById('nav-badge-count').innerText = globalTasks.length;
+        document.getElementById('open-task-count').innerText = globalTasks.length;
+
+        // Einzelobjekte als Karten rendern
+        container.innerHTML = globalTasks.map((task, index) => {
+          const isHigh = task.priority === 'High';
+          const isMed = task.priority === 'Medium';
+          const priorityBadge = isHigh 
+            ? 'bg-error-container text-error' 
+            : (isMed ? 'bg-secondary-fixed text-on-secondary-fixed' : 'bg-surface-container text-on-surface-variant');
+
+          return `
+            <article class="task-card flex flex-col p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high transition-all" data-id="${task.task_id}">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-start gap-2.5 min-w-0">
+                  <span class="w-6 h-6 rounded-full bg-primary-container text-on-primary text-xs font-bold flex items-center justify-center shrink-0">
+                    ${index + 1}
+                  </span>
+                  <div class="flex flex-col min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="px-2 py-0.5 rounded-full ${priorityBadge} text-[10px] font-bold">
+                        ${task.priority} Prio
+                      </span>
+                      <span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary text-[10px] font-semibold">
+                        ${task.category}
+                      </span>
+                      <span class="text-[10px] text-on-surface-variant font-mono">
+                        Dauer: ${task.estimated_duration_min} min
+                      </span>
+                    </div>
+
+                    <h3 class="text-sm font-semibold text-on-surface mt-1 truncate">${task.title}</h3>
+                    <p class="text-xs text-on-surface-variant mt-0.5 line-clamp-1">${task.description}</p>
+                    
+                    <div class="flex items-center gap-3 mt-2 text-on-surface-variant text-[11px]">
+                      <span class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px] text-primary">pin_drop</span>
+                        ${task.latitude.toFixed(4)}, ${task.longitude.toFixed(4)}
+                      </span>
+                      <span class="flex items-center gap-1 text-tertiary-container font-medium">
+                        <span class="material-symbols-outlined text-[14px]">task_alt</span>
+                        ${task.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="check-btn w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-outline hover:bg-tertiary-container hover:text-white transition-all shrink-0">
+                  <span class="material-symbols-outlined text-[18px]">check</span>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-surface-container-high">
+                <span class="text-[11px] text-on-surface-variant truncate">
+                  ${task.attachment_file ? '📎 ' + task.attachment_file : 'Kein Anhang'}
+                </span>
+                <button onclick="showTaskDetail(${task.task_id})" class="px-2 py-0.5 bg-surface-container hover:bg-surface-container-high text-primary rounded-lg text-xs font-semibold flex items-center gap-1">
+                  <span>Details</span>
+                  <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </button>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        // Check-Button Event Listener anbinden
+        document.querySelectorAll('.check-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const card = btn.closest('.task-card');
+            card.classList.toggle('opacity-40');
+            card.classList.toggle('line-through');
+          });
+        });
+
+      } catch (err) {
+        container.innerHTML = `
+          <div class="p-4 rounded-xl bg-error-container text-error text-xs border border-error/20">
+            <strong>Fehler beim Laden von campus_tasks.json:</strong><br>${err.message}
+            <div class="mt-2 text-on-surface-variant">
+              Stelle sicher, dass <code>campus_tasks.json</code> und <code>index.html</code> im selben Ordner liegen und mit einem lokalen Server ausgeführt werden (z. B. VS Code <strong>Live Server</strong>).
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Detail-Ansicht für einen angeklickten Task füllen
+    function showTaskDetail(taskId) {
+      const task = globalTasks.find(t => t.task_id === taskId);
+      if (!task) return;
+
+      document.getElementById('detail-task-id').innerText = 'ID: #' + task.task_id;
+      document.getElementById('detail-title').innerText = task.title;
+      document.getElementById('detail-desc').innerText = task.description;
+      document.getElementById('detail-coords').innerText = `${task.latitude}, ${task.longitude}`;
+      document.getElementById('detail-file').innerText = task.attachment_file || 'Kein Anhang vorhanden';
+
+      switchScreen('details');
+    }
+
+    // Bildschirm-Umschalter
+    function switchScreen(screenName) {
+      document.querySelectorAll('.screen-container').forEach(el => el.classList.remove('active'));
+      const targetScreen = document.getElementById('screen-' + screenName);
+      if (targetScreen) targetScreen.classList.add('active');
+
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        if (tab.getAttribute('data-target') === screenName) {
+          tab.classList.add('text-primary', 'font-bold');
+          tab.classList.remove('text-on-surface-variant', 'font-medium');
+        } else {
+          tab.classList.remove('text-primary', 'font-bold');
+          tab.classList.add('text-on-surface-variant', 'font-medium');
+        }
+      });
+
+      const subtitle = document.getElementById('screen-subtitle');
+      if (screenName === 'map') subtitle.innerText = 'Kartenansicht';
+      else if (screenName === 'errands') subtitle.innerText = 'Aufgaben & JSON Data';
+      else if (screenName === 'details') subtitle.innerText = 'Aufgabendetails';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Beim Laden der Seite JSON einlesen
+    initDataset();
+  </script>
+</body>
+</html>
