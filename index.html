@@ -95,7 +95,7 @@
           <div class="flex flex-col min-w-0">
             <span class="text-xs text-on-surface-variant">Donnerstag • Semester 3</span>
             <h1 class="text-2xl font-bold text-on-surface tracking-tight mt-0.5">
-              Hey Omar, <span id="open-task-count" class="text-primary-container">...</span> Aufgaben geladen
+              Hey Omar, <span id="open-task-count" class="text-primary-container">...</span> offene Aufgaben
             </h1>
           </div>
           <button aria-label="Add Errand" class="w-10 h-10 rounded-xl bg-surface-container-high text-primary flex items-center justify-center shadow-sm active:scale-95 transition-transform">
@@ -106,52 +106,36 @@
         <div class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-low text-on-surface-variant w-fit shadow-sm text-xs">
           <span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
           <span class="material-symbols-outlined text-[16px] text-tertiary-container">near_me</span>
-          <span class="font-semibold text-on-surface">Campus Bibliothek</span>
-          <span>• Frei bis 13:45</span>
+          <span class="font-semibold text-on-surface">FH Technikum Wien</span>
+          <span>• Startpunkt</span>
         </div>
       </section>
 
-      <!-- KPI Metrics Ribbon -->
+      <!-- Kennzahlen aus den geladenen Aufgaben -->
       <section class="grid grid-cols-3 gap-2.5 my-2">
-        <div class="flex flex-col p-2.5 bg-surface-container-lowest rounded-xl shadow-sm justify-between">
-          <div class="flex items-center justify-between text-outline">
-            <span class="text-[11px] font-semibold">Gespart</span>
-            <span class="material-symbols-outlined text-[16px] text-tertiary-container">timer</span>
-          </div>
-          <div class="mt-1">
-            <span class="text-lg font-bold text-on-surface">35 <span class="text-[11px] font-normal text-on-surface-variant">min</span></span>
-          </div>
-          <div class="flex items-center gap-0.5 mt-1">
-            <span class="material-symbols-outlined text-[14px] text-tertiary-container">trending_up</span>
-            <span class="text-[10px] text-tertiary-container font-semibold leading-none">+12% opt</span>
-          </div>
+        <div class="p-2.5 bg-surface-container-lowest rounded-xl shadow-sm">
+          <p class="text-xs text-on-surface-variant">Offen</p>
+          <p id="dashboard-open-count" class="text-lg font-bold text-primary">0</p>
         </div>
+        <div class="p-2.5 bg-surface-container-lowest rounded-xl shadow-sm">
+          <p class="text-xs text-on-surface-variant">Erledigt</p>
+          <p id="completed-task-count" class="text-lg font-bold text-tertiary-container">0</p>
+        </div>
+        <div class="p-2.5 bg-surface-container-lowest rounded-xl shadow-sm">
+          <p class="text-xs text-on-surface-variant">Geladen</p>
+          <p id="json-record-count" class="text-lg font-bold text-primary">0</p>
+        </div>
+      </section>
 
-        <div class="flex flex-col p-2.5 bg-surface-container-lowest rounded-xl shadow-sm justify-between">
-          <div class="flex items-center justify-between text-outline">
-            <span class="text-[11px] font-semibold">Effizienz</span>
-            <span class="material-symbols-outlined text-[16px] text-secondary-container">bolt</span>
-          </div>
-          <div class="mt-1">
-            <span class="text-lg font-bold text-on-surface">92%</span>
-          </div>
-          <div class="flex items-center gap-0.5 mt-1">
-            <span class="text-[10px] text-on-surface-variant font-medium">Smart Loop</span>
-          </div>
-        </div>
-
-        <div class="flex flex-col p-2.5 bg-surface-container-lowest rounded-xl shadow-sm justify-between">
-          <div class="flex items-center justify-between text-outline">
-            <span class="text-[11px] font-semibold">Geladen</span>
-            <span class="material-symbols-outlined text-[16px] text-primary">data_object</span>
-          </div>
-          <div class="mt-1">
-            <span id="json-record-count" class="text-lg font-bold text-primary">0</span>
-          </div>
-          <div class="flex items-center gap-0.5 mt-1">
-            <span class="text-[10px] text-on-surface-variant truncate">campus_tasks.json</span>
-          </div>
-        </div>
+      <section class="mt-3 p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
+        <h2 class="text-base font-bold">Route planen</h2>
+        <p class="text-sm mt-1">Start: <strong>FH Technikum Wien</strong></p>
+        <p class="text-xs text-on-surface-variant">48.2390, 16.3777</p>
+        <label for="start-time" class="block text-sm font-semibold mt-3">Startzeit</label>
+        <input id="start-time" type="time" required class="mt-1 p-2 rounded-lg border border-outline-variant" onchange="clearRouteResult()"/>
+        <p class="text-xs text-on-surface-variant mt-3">Aufgaben unten auswählen. Erledigte Aufgaben werden übersprungen.</p>
+        <button id="optimize-route" type="button" onclick="planRoute()" class="mt-3 px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold">Route optimieren</button>
+        <div id="route-result" aria-live="polite" class="mt-3 text-sm"></div>
       </section>
 
       <!-- Errand Cards Container (Dynamisch aus JSON befüllt) -->
@@ -213,7 +197,7 @@
       </div>
       <h2 class="text-base font-bold text-on-surface">Campus-Kartenansicht</h2>
       <p class="text-xs text-on-surface-variant max-w-xs mt-1">
-        Koordinaten aus der <code>campus_tasks.json</code> werden hier mit Startpunkt Bibliothek gerendert.
+        Eine echte Karte ist noch nicht verfügbar. Die Route wird in der Aufgabenansicht als Liste geplant.
       </p>
       <button class="mt-4 px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold" onclick="switchScreen('errands')">
         Zu den Datensätzen
@@ -247,6 +231,7 @@
   <!-- ==================== JAVASCRIPT: JSON FETCH & RENDER ==================== -->
   <script>
     let globalTasks = [];
+    let selectedTaskIds = [];
     const startLatitude = 48.2390;
     const startLongitude = 16.3777;
 
@@ -277,98 +262,242 @@
         
         globalTasks = await response.json();
 
-        // Statistiken aktualisieren
-        document.getElementById('json-record-count').innerText = globalTasks.length;
-        document.getElementById('badge-total-tasks').innerText = globalTasks.length + ' Aufgaben';
-        document.getElementById('nav-badge-count').innerText = globalTasks.length;
-        document.getElementById('open-task-count').innerText = globalTasks.length;
-
-        // Einzelobjekte als Karten rendern
-        container.innerHTML = globalTasks.map((task, index) => {
-          const distanceKm = calculateDistance(startLatitude, startLongitude, task.latitude, task.longitude);
-          const isHigh = task.priority === 'High';
-          const isMed = task.priority === 'Medium';
-          const priorityBadge = isHigh 
-            ? 'bg-error-container text-error' 
-            : (isMed ? 'bg-secondary-fixed text-on-secondary-fixed' : 'bg-surface-container text-on-surface-variant');
-
-          return `
-            <article class="task-card flex flex-col p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high transition-all" data-id="${task.task_id}">
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-start gap-2.5 min-w-0">
-                  <span class="w-6 h-6 rounded-full bg-primary-container text-on-primary text-xs font-bold flex items-center justify-center shrink-0">
-                    ${index + 1}
-                  </span>
-                  <div class="flex flex-col min-w-0">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="px-2 py-0.5 rounded-full ${priorityBadge} text-[10px] font-bold">
-                        ${task.priority} Prio
-                      </span>
-                      <span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary text-[10px] font-semibold">
-                        ${task.category}
-                      </span>
-                      <span class="text-[10px] text-on-surface-variant font-mono">
-                        Dauer: ${task.estimated_duration_min} min
-                      </span>
-                    </div>
-
-                    <h3 class="text-sm font-semibold text-on-surface mt-1 truncate">${task.title}</h3>
-                    <p class="text-xs text-on-surface-variant mt-0.5 line-clamp-1">${task.description}</p>
-                    
-                    <div class="flex items-center gap-3 mt-2 text-on-surface-variant text-[11px]">
-                      <span class="flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px] text-primary">pin_drop</span>
-                        ${task.latitude.toFixed(4)}, ${task.longitude.toFixed(4)}
-                      </span>
-                      <span class="flex items-center gap-1 text-tertiary-container font-medium">
-                        <span class="material-symbols-outlined text-[14px]">task_alt</span>
-                        ${task.status}
-                      </span>
-                    </div>
-                    <p class="task-distance text-xs font-semibold text-primary mt-2">
-                      Entfernung: ${distanceKm.toFixed(2)} km
-                    </p>
-                  </div>
-                </div>
-
-                <button class="check-btn w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-outline hover:bg-tertiary-container hover:text-white transition-all shrink-0">
-                  <span class="material-symbols-outlined text-[18px]">check</span>
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-surface-container-high">
-                <span class="text-[11px] text-on-surface-variant truncate">
-                  ${task.attachment_file ? '📎 ' + task.attachment_file : 'Kein Anhang'}
-                </span>
-                <button onclick="showTaskDetail(${task.task_id})" class="px-2 py-0.5 bg-surface-container hover:bg-surface-container-high text-primary rounded-lg text-xs font-semibold flex items-center gap-1">
-                  <span>Details</span>
-                  <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
-                </button>
-              </div>
-            </article>
-          `;
-        }).join('');
-
-        // Check-Button Event Listener anbinden
-        document.querySelectorAll('.check-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const card = btn.closest('.task-card');
-            card.classList.toggle('opacity-40');
-            card.classList.toggle('line-through');
-          });
-        });
-
+        if (!Array.isArray(globalTasks)) throw new Error('Die JSON-Datei muss eine Aufgabenliste enthalten.');
+        renderTasks();
       } catch (err) {
-        container.innerHTML = `
-          <div class="p-4 rounded-xl bg-error-container text-error text-xs border border-error/20">
-            <strong>Fehler beim Laden von campus_tasks.json:</strong><br>${err.message}
-            <div class="mt-2 text-on-surface-variant">
-              Stelle sicher, dass <code>campus_tasks.json</code> und <code>index.html</code> im selben Ordner liegen und mit einem lokalen Server ausgeführt werden (z. B. VS Code <strong>Live Server</strong>).
-            </div>
-          </div>
-        `;
+        container.textContent = 'Fehler beim Laden von campus_tasks.json: ' + err.message
+          + '. Bitte index.html und campus_tasks.json über denselben lokalen HTTP-Server öffnen.';
       }
+    }
+
+    function updateCounters() {
+      const completed = globalTasks.filter(task => task.status === 'Erledigt').length;
+      const open = globalTasks.length - completed;
+      document.getElementById('json-record-count').innerText = globalTasks.length;
+      document.getElementById('badge-total-tasks').innerText = globalTasks.length + ' Aufgaben';
+      document.getElementById('nav-badge-count').innerText = open;
+      document.getElementById('open-task-count').innerText = open;
+      document.getElementById('dashboard-open-count').innerText = open;
+      document.getElementById('completed-task-count').innerText = completed;
+    }
+
+    function hasValidCoordinates(task) {
+      return Number.isFinite(task.latitude) && Number.isFinite(task.longitude)
+        && Math.abs(task.latitude) <= 90 && Math.abs(task.longitude) <= 180;
+    }
+
+    function renderTasks() {
+      updateCounters();
+      const container = document.getElementById('json-task-container');
+      // Einzelobjekte als Karten rendern
+      container.innerHTML = globalTasks.map((task, index) => {
+        const validCoordinates = hasValidCoordinates(task);
+        const distanceText = validCoordinates
+          ? calculateDistance(startLatitude, startLongitude, task.latitude, task.longitude).toFixed(2) + ' km (ca. Luftlinie)'
+          : 'nicht verfügbar – ungültige Koordinaten';
+        const isHigh = task.priority === 'High';
+        const isMed = task.priority === 'Medium';
+        const priorityBadge = isHigh
+          ? 'bg-error-container text-error'
+          : (isMed ? 'bg-secondary-fixed text-on-secondary-fixed' : 'bg-surface-container text-on-surface-variant');
+
+        return `
+          <article class="task-card flex flex-col p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high transition-all" data-id="${task.task_id}">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-start gap-2.5 min-w-0">
+                <span class="w-6 h-6 rounded-full bg-primary-container text-on-primary text-xs font-bold flex items-center justify-center shrink-0">
+                  ${index + 1}
+                </span>
+                <div class="flex flex-col min-w-0">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="px-2 py-0.5 rounded-full ${priorityBadge} text-[10px] font-bold">
+                      ${task.priority} Prio
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary text-[10px] font-semibold">
+                      ${task.category}
+                    </span>
+                    <span class="text-[10px] text-on-surface-variant font-mono">
+                      Dauer: ${task.estimated_duration_min} min
+                    </span>
+                  </div>
+
+                  <h3 class="text-sm font-semibold text-on-surface mt-1 truncate ${task.status === 'Erledigt' ? 'line-through' : ''}">${task.title}</h3>
+                  <p class="text-xs text-on-surface-variant mt-0.5 line-clamp-1">${task.description}</p>
+
+                  <div class="flex items-center gap-3 mt-2 text-on-surface-variant text-[11px]">
+                    <span class="flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px] text-primary">pin_drop</span>
+                      ${validCoordinates ? task.latitude.toFixed(4) + ', ' + task.longitude.toFixed(4) : 'Ungültige Koordinaten'}
+                    </span>
+                    <span class="flex items-center gap-1 text-tertiary-container font-medium">
+                      <span class="material-symbols-outlined text-[14px]">task_alt</span>
+                      ${task.status}
+                    </span>
+                  </div>
+                  <p class="task-distance text-xs font-semibold text-primary mt-2">
+                    Entfernung: ${distanceText}
+                  </p>
+                </div>
+              </div>
+
+              <button type="button" onclick="completeTask(${task.task_id})" aria-label="Aufgabe als erledigt markieren" ${task.status === 'Erledigt' ? 'disabled' : ''} class="check-btn w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-outline hover:bg-tertiary-container hover:text-white transition-all shrink-0">
+                <span class="material-symbols-outlined text-[18px]">check</span>
+              </button>
+            </div>
+
+            <label class="flex items-center gap-2 mt-2 text-xs text-primary font-semibold">
+              <input type="checkbox" class="task-selection" data-id="${task.task_id}" ${selectedTaskIds.includes(task.task_id) ? 'checked' : ''} onchange="selectTask(${task.task_id}, this.checked)"/>
+              Für Route auswählen
+            </label>
+            <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-surface-container-high">
+              <span class="text-[11px] text-on-surface-variant truncate">
+                ${task.attachment_file ? '📎 ' + task.attachment_file : 'Kein Anhang'}
+              </span>
+              <button onclick="showTaskDetail(${task.task_id})" class="px-2 py-0.5 bg-surface-container hover:bg-surface-container-high text-primary rounded-lg text-xs font-semibold flex items-center gap-1">
+                <span>Details</span>
+                <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+    }
+
+    function clearRouteResult() {
+      document.getElementById('route-result').textContent = '';
+    }
+
+    function selectTask(taskId, checked) {
+      if (checked && !selectedTaskIds.includes(taskId)) selectedTaskIds.push(taskId);
+      if (!checked) selectedTaskIds = selectedTaskIds.filter(id => id !== taskId);
+      clearRouteResult();
+    }
+
+    function completeTask(taskId) {
+      const task = globalTasks.find(task => task.task_id === taskId);
+      if (!task) return;
+      task.status = 'Erledigt';
+      renderTasks();
+      // Eine alte Route ist nach einer Statusänderung nicht mehr aktuell.
+      clearRouteResult();
+    }
+
+    function findNearestTask(latitude, longitude, tasks) {
+      let nearestTask = null;
+      let shortestDistance = Infinity;
+      for (const task of tasks) {
+        if (task.status === 'Erledigt' || !hasValidCoordinates(task)) continue;
+        const distance = calculateDistance(latitude, longitude, task.latitude, task.longitude);
+        if (distance < shortestDistance) {
+          nearestTask = task;
+          shortestDistance = distance;
+        }
+      }
+      return nearestTask;
+    }
+
+    function optimizeRoute(tasks, startMinutes) {
+      // Mit einer Kopie arbeiten: Die Reihenfolge im Datensatz bleibt erhalten.
+      let remaining = tasks.filter(task => task.status !== 'Erledigt' && hasValidCoordinates(task));
+      let latitude = startLatitude;
+      let longitude = startLongitude;
+      let currentMinutes = startMinutes;
+      let totalDistance = 0;
+      let totalDuration = 0;
+      const stops = [];
+      while (remaining.length > 0) {
+        const task = findNearestTask(latitude, longitude, remaining);
+        if (!task) break;
+        const distance = calculateDistance(latitude, longitude, task.latitude, task.longitude);
+        const duration = task.estimated_duration_min;
+        stops.push({ task: task, distance: distance, startMinutes: currentMinutes });
+        totalDistance += distance;
+        totalDuration += duration;
+        currentMinutes += duration;
+        latitude = task.latitude;
+        longitude = task.longitude;
+        remaining = remaining.filter(other => other.task_id !== task.task_id);
+      }
+      return { stops: stops, totalDistance: totalDistance, totalDuration: totalDuration, endMinutes: currentMinutes };
+    }
+
+    function formatTime(minutes) {
+      const days = Math.floor(minutes / 1440);
+      const hours = Math.floor(minutes / 60) % 24;
+      const remainder = minutes % 60;
+      return String(hours).padStart(2, '0') + ':' + String(remainder).padStart(2, '0')
+        + (days > 0 ? ' (+' + days + ' Tag/e)' : '');
+    }
+
+    function planRoute() {
+      const output = document.getElementById('route-result');
+      const selectedTasks = globalTasks.filter(task => selectedTaskIds.includes(task.task_id));
+      if (selectedTasks.length === 0) {
+        output.textContent = 'Bitte mindestens eine Aufgabe auswählen.';
+        return;
+      }
+      const time = document.getElementById('start-time').value;
+      if (!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+        output.textContent = 'Bitte eine gültige Startzeit eingeben.';
+        return;
+      }
+      const openTasks = selectedTasks.filter(task => task.status !== 'Erledigt');
+      if (openTasks.length === 0) {
+        output.textContent = 'Alle ausgewählten Aufgaben sind bereits erledigt.';
+        return;
+      }
+      const validTasks = openTasks.filter(hasValidCoordinates);
+      const invalidCount = openTasks.length - validTasks.length;
+      if (validTasks.length === 0) {
+        output.textContent = 'Keine planbare Aufgabe: Koordinaten fehlen oder sind ungültig.';
+        return;
+      }
+      // Ohne gültige Dauer wäre die angezeigte Zeitplanung irreführend.
+      if (validTasks.some(task => !Number.isInteger(task.estimated_duration_min) || task.estimated_duration_min < 0)) {
+        output.textContent = 'Bitte die Aufgabendauer prüfen: Sie muss eine ganze, nicht negative Minutenzahl sein.';
+        return;
+      }
+      const parts = time.split(':');
+      const startMinutes = Number(parts[0]) * 60 + Number(parts[1]);
+      const route = optimizeRoute(validTasks, startMinutes);
+      renderRoute(route, startMinutes, selectedTasks.length - openTasks.length, invalidCount);
+    }
+
+    function renderRoute(route, startMinutes, completedCount, invalidCount) {
+      const output = document.getElementById('route-result');
+      output.textContent = '';
+      const heading = document.createElement('p');
+      heading.className = 'font-bold text-primary';
+      heading.textContent = 'Start: FH Technikum Wien – ' + formatTime(startMinutes);
+      output.appendChild(heading);
+      const list = document.createElement('ol');
+      list.className = 'list-decimal pl-5 mt-2 space-y-2';
+      for (const stop of route.stops) {
+        const item = document.createElement('li');
+        const title = document.createElement('strong');
+        title.textContent = stop.task.title;
+        const info = document.createElement('p');
+        info.className = 'text-xs text-on-surface-variant';
+        info.textContent = stop.distance.toFixed(2) + ' km (ca. Luftlinie vom vorherigen Stopp)'
+          + ' · Dauer: ' + stop.task.estimated_duration_min + ' min'
+          + ' · ' + formatTime(stop.startMinutes) + '–' + formatTime(stop.startMinutes + stop.task.estimated_duration_min);
+        item.appendChild(title);
+        item.appendChild(info);
+        list.appendChild(item);
+      }
+      output.appendChild(list);
+      const summary = document.createElement('p');
+      summary.className = 'font-semibold mt-3';
+      summary.textContent = route.stops.length + ' ausgewählte Route-Aufgaben · Gesamt: '
+        + route.totalDistance.toFixed(2) + ' km (ca. Luftlinie) · Aufgabendauer: '
+        + route.totalDuration + ' min · Ende: ' + formatTime(route.endMinutes);
+      output.appendChild(summary);
+      const note = document.createElement('p');
+      note.className = 'text-xs text-on-surface-variant mt-2';
+      note.textContent = 'Zeiten enthalten nur die Aufgabendauer, keine Wegzeiten. Kein Rückweg zum Start. '
+        + completedCount + ' erledigte und ' + invalidCount + ' Aufgaben mit ungültigen Koordinaten übersprungen.';
+      output.appendChild(note);
     }
 
     // Detail-Ansicht für einen angeklickten Task füllen

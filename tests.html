@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CampusRoute – Algorithmus-Tests</title>
+  <style>
+    body { font-family: sans-serif; max-width: 850px; margin: 2rem auto; padding: 0 1rem; }
+    li { margin-bottom: 1rem; }
+    .pass { color: #006e4c; }
+    .fail { color: #ba1a1a; }
+    #summary { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>CampusRoute – Algorithmus-Tests</h1>
+  <p>Diese Tests prüfen die echten Funktionen aus index.html mit kleinen Testdaten.
+    Sie ändern weder die JSON-Datei noch die Aufgaben in der Anwendung.</p>
+  <p>Über denselben lokalen HTTP-Server wie index.html öffnen. Zum Wiederholen die Seite neu laden.</p>
+  <p id="summary" aria-live="polite">Tests werden geladen …</p>
+  <ol id="results"></ol>
+
+  <!-- Die Anwendung laden, damit keine Kopien der Algorithmen getestet werden. -->
+  <iframe id="application" title="CampusRoute für Algorithmus-Tests" hidden></iframe>
+  <script>
+    function assert(condition, message) {
+      if (!condition) throw new Error(message);
+    }
+
+    function approximatelyEqual(first, second) {
+      return Math.abs(first - second) < 0.000001;
+    }
+
+    // Diese erfundenen Aufgaben sind nur Testdaten, keine Anwendungsdaten.
+    function createTask(id, latitude, longitude, status) {
+      return {
+        task_id: id,
+        latitude: latitude,
+        longitude: longitude,
+        status: status,
+        estimated_duration_min: 10
+      };
+    }
+
+    function runTests(app) {
+      let passed = 0;
+      let failed = 0;
+
+      function test(name, expected, check) {
+        const item = document.createElement('li');
+        try {
+          const actual = check();
+          item.className = 'pass';
+          item.textContent = 'PASS – ' + name + ' | Erwartet: ' + expected + ' | Tatsächlich: ' + actual;
+          passed++;
+        } catch (error) {
+          item.className = 'fail';
+          item.textContent = 'FAIL – ' + name + ' | Erwartet: ' + expected + ' | Tatsächlich: ' + error.message;
+          failed++;
+        }
+        document.getElementById('results').appendChild(item);
+      }
+
+      test('Identische Koordinaten', 'ungefähr 0 km', function () {
+        const distance = app.calculateDistance(48.2390, 16.3777, 48.2390, 16.3777);
+        assert(approximatelyEqual(distance, 0), distance + ' km');
+        return distance + ' km';
+      });
+
+      test('Symmetrische Entfernung', 'A → B gleich B → A', function () {
+        const forward = app.calculateDistance(48.2390, 16.3777, 48.2341, 16.3712);
+        const backward = app.calculateDistance(48.2341, 16.3712, 48.2390, 16.3777);
+        assert(approximatelyEqual(forward, backward), forward + ' gegenüber ' + backward);
+        return forward.toFixed(6) + ' km in beiden Richtungen';
+      });
+
+      test('Nächste Aufgabe', 'Aufgabe 2, nicht die erste in der Liste', function () {
+        const far = createTask(1, 48.25, 16.39, 'Geplant');
+        const near = createTask(2, 48.2391, 16.3777, 'Geplant');
+        const nearest = app.findNearestTask(48.2390, 16.3777, [far, near]);
+        assert(nearest === near, 'Gewählt: ' + (nearest ? nearest.task_id : 'keine Aufgabe'));
+        return 'Aufgabe ' + nearest.task_id;
+      });
+
+      test('Route mit einer Aufgabe', 'genau Aufgabe 1; 10 min Dauer', function () {
+        const task = createTask(1, 48.2391, 16.3777, 'Geplant');
+        const route = app.optimizeRoute([task], 810);
+        assert(route.stops.length === 1, route.stops.length + ' Stopps');
+        assert(route.stops[0].task === task, 'Falsche Aufgabe');
+        assert(route.totalDuration === 10 && route.endMinutes === 820, 'Falsche Zeitberechnung');
+        return 'Aufgabe 1; 10 min; Ende 13:40';
+      });
+
+      test('Erledigte Aufgaben ausschließen', 'nur offene Aufgabe 2', function () {
+        const completed = createTask(1, 48.2390, 16.3777, 'Erledigt');
+        const open = createTask(2, 48.24, 16.38, 'Geplant');
+        const route = app.optimizeRoute([completed, open], 810);
+        assert(route.stops.length === 1 && route.stops[0].task === open,
+          'Route-IDs: ' + route.stops.map(stop => stop.task.task_id).join(', '));
+        return 'nur Aufgabe 2';
+      });
+
+      test('Leere Aufgabenliste', '0 Stopps, 0 km, 0 min', function () {
+        const route = app.optimizeRoute([], 810);
+        assert(route.stops.length === 0 && route.totalDistance === 0 && route.totalDuration === 0
+          && route.endMinutes === 810, JSON.stringify(route));
+        return '0 Stopps, 0 km, 0 min; Startzeit unverändert';
+      });
+
+      test('Ungültige Koordinaten', 'überspringen, gültige Aufgabe behalten; kein Absturz', function () {
+        const invalid = [
+          createTask(1, null, 16.38, 'Geplant'),
+          createTask(2, 91, 16.38, 'Geplant'),
+          createTask(3, 48.24, 181, 'Geplant'),
+          createTask(4, NaN, 16.38, 'Geplant'),
+          createTask(5, 48.24, undefined, 'Geplant'),
+          createTask(6, '48.24', 16.38, 'Geplant')
+        ];
+        const valid = createTask(7, 48.24, 16.38, 'Geplant');
+        const route = app.optimizeRoute(invalid.concat([valid]), 810);
+        assert(route.stops.length === 1 && route.stops[0].task === valid, 'Ungültige Aufgabe in Route');
+        assert(Number.isFinite(route.totalDistance), 'Ungültige Gesamtentfernung');
+        assert(app.optimizeRoute(invalid, 810).stops.length === 0, 'Ungültige Route nicht leer');
+        assert(app.findNearestTask(48.2390, 16.3777, invalid) === null, 'Ungültige nächste Aufgabe');
+        return 'nur Aufgabe 7; ausschließlich ungültige Aufgaben ergeben eine leere Route';
+      });
+
+      document.getElementById('summary').textContent = (passed + failed) + ' tests · '
+        + passed + ' passed · ' + failed + ' failed';
+    }
+
+    const frame = document.getElementById('application');
+    frame.onload = function () {
+      try {
+        runTests(frame.contentWindow);
+      } catch (error) {
+        document.getElementById('summary').textContent = 'Tests konnten nicht starten: ' + error.message;
+      }
+    };
+    frame.src = './index.html';
+  </script>
+</body>
+</html>
