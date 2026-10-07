@@ -97,14 +97,15 @@
       <section class="flex flex-col gap-2 pt-3 pb-2">
         <div class="flex items-start justify-between gap-2">
           <div class="flex flex-col min-w-0">
-            <span class="text-xs text-on-surface-variant">Donnerstag • Semester 3</span>
+            <span class="text-xs text-on-surface-variant">WS 2026 • FH Technikum Wien</span>
             <h1 class="text-2xl font-bold text-on-surface tracking-tight mt-0.5">
-              Hey Omar, <span id="open-task-count" class="text-primary-container">...</span> offene Aufgaben
+              <span id="open-task-count" class="text-primary-container">...</span> offene Aufgaben
             </h1>
           </div>
-          <button aria-label="Add Errand" class="w-10 h-10 rounded-xl bg-surface-container-high text-primary flex items-center justify-center shadow-sm active:scale-95 transition-transform">
-            <span class="material-symbols-outlined text-[22px]">add_circle</span>
-          </button>
+          <div class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container-low text-xs text-on-surface-variant">
+            <span class="material-symbols-outlined text-[18px] text-primary">route</span>
+            <span>CampusRoute Dashboard</span>
+          </div>
         </div>
         
         <div class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-low text-on-surface-variant w-fit shadow-sm text-xs">
@@ -132,7 +133,7 @@
       </section>
 
       <div class="mt-3 grid grid-cols-1 lg:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.8fr)] gap-4 items-start">
-      <section class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high lg:sticky lg:top-20">
+      <section class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
         <div class="flex items-center justify-between gap-3">
           <div>
             <h2 class="text-base font-bold">Route planen</h2>
