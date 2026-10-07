@@ -10,6 +10,8 @@
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet"/>
   
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -56,6 +58,8 @@
     ::-webkit-scrollbar { display: none; }
     .screen-container { display: none; }
     .screen-container.active { display: flex; flex-direction: column; }
+    #campus-map { width: 100%; height: 100%; min-height: 560px; }
+    .leaflet-container { font-family: Inter, sans-serif; }
   </style>
 </head>
 <body class="bg-surface text-on-surface antialiased flex flex-col min-h-screen">
@@ -191,17 +195,27 @@
 
   <!-- ==================== SCREEN 3: MAP ==================== -->
   <main id="screen-map" class="screen-container flex-1 w-full pt-16 pb-20 bg-surface">
-    <div class="relative w-full h-[calc(100vh-140px)] min-h-[560px] overflow-hidden bg-surface-container-low flex flex-col items-center justify-center p-6 text-center">
-      <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
-        <span class="material-symbols-outlined text-[32px]">map</span>
+    <div class="relative w-full h-[calc(100vh-140px)] min-h-[560px] overflow-hidden bg-surface-container-low">
+      <div id="campus-map" class="absolute inset-0"></div>
+
+      <div class="absolute top-3 left-3 right-3 flex justify-between gap-2 pointer-events-none" style="z-index: 500;">
+        <div class="bg-white/95 backdrop-blur rounded-xl shadow-md px-3 py-2 text-left pointer-events-auto">
+          <p class="text-sm font-bold text-on-surface">Campus-Karte</p>
+          <p id="map-status" class="text-[11px] text-on-surface-variant">Aufgaben werden geladen …</p>
+        </div>
+        <div class="bg-white/95 backdrop-blur rounded-xl shadow-md px-3 py-2 text-[10px] text-on-surface-variant text-left">
+          <p><span class="inline-block w-2 h-2 rounded-full bg-primary-container mr-1"></span> offen</p>
+          <p><span class="inline-block w-2 h-2 rounded-full bg-secondary-container mr-1"></span> ausgewählt</p>
+          <p><span class="inline-block w-2 h-2 rounded-full bg-tertiary-container mr-1"></span> erledigt</p>
+        </div>
       </div>
-      <h2 class="text-base font-bold text-on-surface">Campus-Kartenansicht</h2>
-      <p class="text-xs text-on-surface-variant max-w-xs mt-1">
-        Eine echte Karte ist noch nicht verfügbar. Die Route wird in der Aufgabenansicht als Liste geplant.
-      </p>
-      <button class="mt-4 px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold" onclick="switchScreen('errands')">
-        Zu den Datensätzen
-      </button>
+
+      <div class="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur rounded-xl shadow-md p-3 text-left" style="z-index: 500;">
+        <p class="text-xs font-semibold text-on-surface">OpenStreetMap + Leaflet</p>
+        <p class="text-[11px] text-on-surface-variant">
+          Marker zeigen die JSON-Aufgaben. Nach „Route optimieren“ verbindet die Karte die Stopps in berechneter Reihenfolge als Luftlinie.
+        </p>
+      </div>
     </div>
   </main>
 
@@ -232,8 +246,110 @@
   <script>
     let globalTasks = [];
     let selectedTaskIds = [];
+    let campusMap = null;
+    let taskMarkersLayer = null;
+    let routeLayer = null;
+    let lastPlannedRoute = null;
     const startLatitude = 48.2390;
     const startLongitude = 16.3777;
+
+
+    function updateMapStatus(text) {
+      const status = document.getElementById('map-status');
+      if (status) status.textContent = text;
+    }
+
+    function ensureMap() {
+      if (campusMap || typeof L === 'undefined') return;
+
+      campusMap = L.map('campus-map').setView([startLatitude, startLongitude], 15);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(campusMap);
+
+      taskMarkersLayer = L.layerGroup().addTo(campusMap);
+      routeLayer = L.layerGroup().addTo(campusMap);
+      refreshMapMarkers();
+
+      if (lastPlannedRoute) drawRouteOnMap(lastPlannedRoute);
+      setTimeout(() => campusMap.invalidateSize(), 50);
+    }
+
+    function refreshMapMarkers() {
+      if (!campusMap || !taskMarkersLayer) return;
+      taskMarkersLayer.clearLayers();
+
+      L.circleMarker([startLatitude, startLongitude], {
+        radius: 9,
+        color: '#ffffff',
+        weight: 3,
+        fillColor: '#3525cd',
+        fillOpacity: 1
+      }).addTo(taskMarkersLayer).bindPopup('<strong>Start: FH Technikum Wien</strong><br>48.2390, 16.3777');
+
+      for (const task of globalTasks) {
+        if (!hasValidCoordinates(task)) continue;
+        const isCompleted = task.status === 'Erledigt';
+        const isSelected = selectedTaskIds.includes(task.task_id);
+        const markerColor = isCompleted ? '#006e4c' : (isSelected ? '#fe932c' : '#4f46e5');
+
+        L.circleMarker([task.latitude, task.longitude], {
+          radius: 8,
+          color: '#ffffff',
+          weight: 2,
+          fillColor: markerColor,
+          fillOpacity: 0.95
+        }).addTo(taskMarkersLayer).bindPopup(
+          '<strong>' + task.title + '</strong><br>'
+          + task.category + ' · ' + task.status + '<br>'
+          + 'Dauer: ' + task.estimated_duration_min + ' min'
+        );
+      }
+
+      const completed = globalTasks.filter(task => task.status === 'Erledigt').length;
+      updateMapStatus(globalTasks.length + ' Aufgaben · ' + selectedTaskIds.length
+        + ' ausgewählt · ' + completed + ' erledigt');
+    }
+
+    function drawRouteOnMap(route) {
+      if (!campusMap || !routeLayer) return;
+      routeLayer.clearLayers();
+
+      if (!route || route.stops.length === 0) {
+        refreshMapMarkers();
+        return;
+      }
+
+      const points = [[startLatitude, startLongitude]];
+      for (const stop of route.stops) {
+        points.push([stop.task.latitude, stop.task.longitude]);
+      }
+
+      L.polyline(points, {
+        color: '#3525cd',
+        weight: 5,
+        opacity: 0.8,
+        dashArray: '10 8'
+      }).addTo(routeLayer);
+
+      route.stops.forEach((stop, index) => {
+        const numberIcon = L.divIcon({
+          className: '',
+          html: '<div style="width:24px;height:24px;border-radius:9999px;background:#3525cd;color:white;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 1px 5px rgba(0,0,0,.35)">' + (index + 1) + '</div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+        L.marker([stop.task.latitude, stop.task.longitude], {
+          icon: numberIcon,
+          interactive: false
+        }).addTo(routeLayer);
+      });
+
+      campusMap.fitBounds(L.latLngBounds(points).pad(0.18), { maxZoom: 16 });
+      updateMapStatus(route.stops.length + ' Route-Stopps · '
+        + route.totalDistance.toFixed(2) + ' km ca. Luftlinie');
+    }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
       const earthRadiusKm = 6371;
@@ -362,16 +478,20 @@
         `;
       }).join('');
 
+      if (campusMap) refreshMapMarkers();
     }
 
     function clearRouteResult() {
       document.getElementById('route-result').textContent = '';
+      lastPlannedRoute = null;
+      if (routeLayer) routeLayer.clearLayers();
     }
 
     function selectTask(taskId, checked) {
       if (checked && !selectedTaskIds.includes(taskId)) selectedTaskIds.push(taskId);
       if (!checked) selectedTaskIds = selectedTaskIds.filter(id => id !== taskId);
       clearRouteResult();
+      if (campusMap) refreshMapMarkers();
     }
 
     function completeTask(taskId) {
@@ -461,7 +581,9 @@
       const parts = time.split(':');
       const startMinutes = Number(parts[0]) * 60 + Number(parts[1]);
       const route = optimizeRoute(validTasks, startMinutes);
+      lastPlannedRoute = route;
       renderRoute(route, startMinutes, selectedTasks.length - openTasks.length, invalidCount);
+      if (campusMap) drawRouteOnMap(route);
     }
 
     function renderRoute(route, startMinutes, completedCount, invalidCount) {
@@ -498,6 +620,13 @@
       note.textContent = 'Zeiten enthalten nur die Aufgabendauer, keine Wegzeiten. Kein Rückweg zum Start. '
         + completedCount + ' erledigte und ' + invalidCount + ' Aufgaben mit ungültigen Koordinaten übersprungen.';
       output.appendChild(note);
+
+      const mapButton = document.createElement('button');
+      mapButton.type = 'button';
+      mapButton.className = 'mt-3 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold';
+      mapButton.textContent = 'Route auf Karte anzeigen';
+      mapButton.onclick = function () { switchScreen('map'); };
+      output.appendChild(mapButton);
     }
 
     // Detail-Ansicht für einen angeklickten Task füllen
@@ -531,8 +660,17 @@
       });
 
       const subtitle = document.getElementById('screen-subtitle');
-      if (screenName === 'map') subtitle.innerText = 'Kartenansicht';
-      else if (screenName === 'errands') subtitle.innerText = 'Aufgaben & JSON Data';
+      if (screenName === 'map') {
+        subtitle.innerText = 'Kartenansicht';
+        setTimeout(function () {
+          ensureMap();
+          if (campusMap) {
+            campusMap.invalidateSize();
+            refreshMapMarkers();
+            if (lastPlannedRoute) drawRouteOnMap(lastPlannedRoute);
+          }
+        }, 0);
+      } else if (screenName === 'errands') subtitle.innerText = 'Aufgaben & JSON Data';
       else if (screenName === 'details') subtitle.innerText = 'Aufgabendetails';
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
