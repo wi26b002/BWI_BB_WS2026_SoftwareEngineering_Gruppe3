@@ -10,7 +10,7 @@ Technologies: HTML, Vanilla JavaScript, Tailwind CSS via CDN, JSON, Leaflet, Ope
 - **Logic tier:** JavaScript data handling, Haversine distance calculation, and the greedy nearest-neighbour route algorithm in `index.html`.
 - **Data tier:** `campus_tasks.json`.
 
-These are logical tiers within a static browser application. There is **no application backend or database**. A local HTTP server only serves the files. No npm, framework, or build step is required. Internet access is needed for Tailwind CDN, Google Fonts, Leaflet CDN, and OpenStreetMap map tiles.
+These are logical tiers within a static browser application. There is **no application backend or database**. A local HTTP server only serves the files. No npm, framework, or build step is required. Internet access is needed for Tailwind CDN, Google Fonts, Leaflet CDN, OpenStreetMap map tiles, and live Valhalla routing.
 
 ## Run the application
 
@@ -34,7 +34,7 @@ The seven browser tests cover identical-coordinate distance, distance symmetry, 
 
 ## Algorithm and limitations
 
-The route repeatedly chooses the nearest remaining selected, unfinished task using Haversine distance, advances the clock by the task duration, and continues from that task's coordinates. Invalid coordinates are skipped.
+The primary route planner uses a greedy nearest-neighbour strategy over a Valhalla travel-time matrix: from the current point it chooses the reachable remaining task with the lowest estimated network travel time for the selected mode, then repeats from that task. The Haversine function remains as a tested local fallback if live routing is unavailable. Invalid coordinates and completed tasks are skipped.
 
 - The primary route uses Valhalla/OpenStreetMap network routing for walking, bicycle, car, and multimodal/public-transport legs. If the public routing service is unavailable, the application falls back to the local Haversine approximation instead of crashing.
 - Greedy nearest-neighbour is a heuristic, so the result is not guaranteed globally optimal.
