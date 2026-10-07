@@ -66,7 +66,7 @@
 
   <!-- ==================== HEADER ==================== -->
   <header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-    <div class="h-16 px-4 flex items-center justify-between">
+    <div class="h-16 px-4 max-w-7xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="h-8 w-8 rounded-lg shadow-sm" fill="none">
           <rect width="120" height="120" rx="28" fill="#4F46E5"/>
@@ -91,7 +91,7 @@
 
   <!-- ==================== SCREEN 1: ERRANDS DASHBOARD (LÄDT JSON) ==================== -->
   <main id="screen-errands" class="screen-container active flex-1 w-full pt-16 pb-24 bg-surface">
-    <div class="flex flex-col w-full pb-6 px-4">
+    <div class="flex flex-col w-full max-w-7xl mx-auto pb-6 px-4 sm:px-6 lg:px-8">
       
       <!-- Welcome Header -->
       <section class="flex flex-col gap-2 pt-3 pb-2">
@@ -131,19 +131,44 @@
         </div>
       </section>
 
-      <section class="mt-3 p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
-        <h2 class="text-base font-bold">Route planen</h2>
-        <p class="text-sm mt-1">Start: <strong>FH Technikum Wien</strong></p>
-        <p class="text-xs text-on-surface-variant">48.2390, 16.3777</p>
-        <label for="start-time" class="block text-sm font-semibold mt-3">Startzeit</label>
-        <input id="start-time" type="time" required class="mt-1 p-2 rounded-lg border border-outline-variant" onchange="clearRouteResult()"/>
-        <p class="text-xs text-on-surface-variant mt-3">Aufgaben unten auswählen. Erledigte Aufgaben werden übersprungen.</p>
-        <button id="optimize-route" type="button" onclick="planRoute()" class="mt-3 px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold">Route optimieren</button>
+      <div class="mt-3 grid grid-cols-1 lg:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.8fr)] gap-4 items-start">
+      <section class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high lg:sticky lg:top-20">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold">Route planen</h2>
+            <p class="text-sm mt-1">Start: <strong>FH Technikum Wien</strong></p>
+            <p class="text-xs text-on-surface-variant">48.2390, 16.3777</p>
+          </div>
+          <span class="material-symbols-outlined text-primary text-[28px]">route</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 mt-4">
+          <div>
+            <label for="start-time" class="block text-sm font-semibold">Startzeit</label>
+            <input id="start-time" type="time" required class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant bg-white" onchange="clearRouteResult()"/>
+          </div>
+          <div>
+            <label for="travel-mode" class="block text-sm font-semibold">Verkehrsmittel</label>
+            <select id="travel-mode" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant bg-white" onchange="clearRouteResult(); refreshMapMarkers();">
+              <option value="pedestrian">🚶 Zu Fuß</option>
+              <option value="bicycle">🚲 Fahrrad</option>
+              <option value="auto">🚗 Auto</option>
+              <option value="multimodal">🚇 Öffis</option>
+            </select>
+          </div>
+        </div>
+
+        <p id="routing-hint" class="text-xs text-on-surface-variant mt-3">
+          Live-Routing über das Straßennetz. Aufgaben unten auswählen; erledigte Aufgaben werden übersprungen.
+        </p>
+        <button id="optimize-route" type="button" onclick="planRoute()" class="mt-3 w-full px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-50 disabled:cursor-wait">
+          Route optimieren
+        </button>
         <div id="route-result" aria-live="polite" class="mt-3 text-sm"></div>
       </section>
 
       <!-- Errand Cards Container (Dynamisch aus JSON befüllt) -->
-      <section class="mt-3 flex flex-col gap-2">
+      <section class="flex flex-col gap-2 min-w-0">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <h2 class="text-base font-bold text-on-surface">Importierte JSON-Aufgaben</h2>
@@ -151,16 +176,17 @@
           </div>
         </div>
 
-        <div class="flex flex-col gap-2.5 mt-1" id="json-task-container">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-2.5 mt-1" id="json-task-container">
           <!-- Dynamischer Inhalt aus campus_tasks.json wird hier per JS eingefügt -->
         </div>
       </section>
+      </div>
     </div>
   </main>
 
   <!-- ==================== SCREEN 2: TASK DETAILS ==================== -->
   <main id="screen-details" class="screen-container flex-1 w-full pt-16 pb-28 bg-surface">
-    <div class="flex flex-col w-full pb-10">
+    <div class="flex flex-col w-full max-w-4xl mx-auto pb-10">
       <div class="px-4 pt-3 pb-3 bg-surface-container-low flex flex-col gap-2 shadow-sm">
         <div class="flex items-center justify-between">
           <span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[11px] font-semibold">AUFGABENDETAIL</span>
@@ -198,7 +224,7 @@
     <div class="relative w-full h-[calc(100vh-140px)] min-h-[560px] overflow-hidden bg-surface-container-low">
       <div id="campus-map" class="absolute inset-0"></div>
 
-      <div class="absolute top-3 left-3 right-3 flex justify-between gap-2 pointer-events-none" style="z-index: 500;">
+      <div class="absolute top-3 left-3 right-3 flex flex-col sm:flex-row sm:justify-between gap-2 pointer-events-none" style="z-index: 500;">
         <div class="bg-white/95 backdrop-blur rounded-xl shadow-md px-3 py-2 text-left pointer-events-auto">
           <p class="text-sm font-bold text-on-surface">Campus-Karte</p>
           <p id="map-status" class="text-[11px] text-on-surface-variant">Aufgaben werden geladen …</p>
@@ -211,16 +237,16 @@
       </div>
 
       <div class="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur rounded-xl shadow-md p-3 text-left" style="z-index: 500;">
-        <p class="text-xs font-semibold text-on-surface">OpenStreetMap + Leaflet</p>
+        <p class="text-xs font-semibold text-on-surface">OpenStreetMap + Leaflet + Valhalla</p>
         <p class="text-[11px] text-on-surface-variant">
-          Marker zeigen die JSON-Aufgaben. Nach „Route optimieren“ verbindet die Karte die Stopps in berechneter Reihenfolge als Luftlinie.
+          Die Route folgt dem echten Wegenetz für das gewählte Verkehrsmittel. Bei nicht erreichbarem Routing-Dienst fällt die App kontrolliert auf eine lokale Näherung zurück.
         </p>
       </div>
     </div>
   </main>
 
   <!-- ==================== BOTTOM NAV ==================== -->
-  <nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/80 backdrop-blur-xl border-t border-surface-container-high shadow-[0_-2px_12px_rgba(0,0,0,0.05)]">
+  <nav class="fixed bottom-0 w-full md:w-[520px] md:left-1/2 md:-translate-x-1/2 md:bottom-4 md:rounded-2xl z-50 pb-safe md:pb-0 bg-surface/90 backdrop-blur-xl border-t md:border border-surface-container-high shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
     <div class="flex justify-around items-center h-16 px-2">
       <button onclick="switchScreen('map')" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-primary transition-colors py-1" data-target="map">
         <span class="material-symbols-outlined text-[22px]">map</span>
@@ -250,8 +276,17 @@
     let taskMarkersLayer = null;
     let routeLayer = null;
     let lastPlannedRoute = null;
+    const routingCache = new Map();
+    const routingApiBase = 'https://valhalla1.openstreetmap.de';
     const startLatitude = 48.2390;
     const startLongitude = 16.3777;
+
+    const travelModes = {
+      pedestrian: { label: 'Zu Fuß', icon: '🚶', matrixCosting: 'pedestrian' },
+      bicycle: { label: 'Fahrrad', icon: '🚲', matrixCosting: 'bicycle' },
+      auto: { label: 'Auto', icon: '🚗', matrixCosting: 'auto' },
+      multimodal: { label: 'Öffis', icon: '🚇', matrixCosting: 'pedestrian' }
+    };
 
 
     function updateMapStatus(text) {
@@ -321,24 +356,25 @@
         return;
       }
 
-      const points = [[startLatitude, startLongitude]];
-      for (const stop of route.stops) {
-        points.push([stop.task.latitude, stop.task.longitude]);
-      }
+      const fallbackPoints = [[startLatitude, startLongitude]];
+      for (const stop of route.stops) fallbackPoints.push([stop.task.latitude, stop.task.longitude]);
+      const points = route.pathCoordinates && route.pathCoordinates.length > 1
+        ? route.pathCoordinates
+        : fallbackPoints;
 
       L.polyline(points, {
         color: '#3525cd',
         weight: 5,
-        opacity: 0.8,
-        dashArray: '10 8'
+        opacity: 0.85,
+        dashArray: route.networkRouting ? null : '10 8'
       }).addTo(routeLayer);
 
       route.stops.forEach((stop, index) => {
         const numberIcon = L.divIcon({
           className: '',
-          html: '<div style="width:24px;height:24px;border-radius:9999px;background:#3525cd;color:white;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 1px 5px rgba(0,0,0,.35)">' + (index + 1) + '</div>',
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
+          html: '<div style="width:26px;height:26px;border-radius:9999px;background:#3525cd;color:white;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 1px 5px rgba(0,0,0,.35)">' + (index + 1) + '</div>',
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
         });
         L.marker([stop.task.latitude, stop.task.longitude], {
           icon: numberIcon,
@@ -346,9 +382,243 @@
         }).addTo(routeLayer);
       });
 
-      campusMap.fitBounds(L.latLngBounds(points).pad(0.18), { maxZoom: 16 });
-      updateMapStatus(route.stops.length + ' Route-Stopps · '
-        + route.totalDistance.toFixed(2) + ' km ca. Luftlinie');
+      campusMap.fitBounds(L.latLngBounds(points).pad(0.12), { maxZoom: 17 });
+      const mode = travelModes[route.mode] || travelModes.pedestrian;
+      const travelText = Number.isFinite(route.totalTravelMinutes)
+        ? ' · ' + route.totalTravelMinutes + ' min unterwegs'
+        : '';
+      updateMapStatus(mode.icon + ' ' + mode.label + ' · ' + route.stops.length
+        + ' Stopps · ' + route.totalDistance.toFixed(2) + ' km' + travelText);
+    }
+
+
+    function getTravelMode() {
+      const select = document.getElementById('travel-mode');
+      return select && travelModes[select.value] ? select.value : 'pedestrian';
+    }
+
+    function setRouteLoading(isLoading) {
+      const button = document.getElementById('optimize-route');
+      if (!button) return;
+      button.disabled = isLoading;
+      button.textContent = isLoading ? 'Route wird berechnet …' : 'Route optimieren';
+    }
+
+    function valhallaUrl(action, payload) {
+      return routingApiBase + action + '?json=' + encodeURIComponent(JSON.stringify(payload));
+    }
+
+    async function fetchValhalla(action, payload) {
+      const cacheKey = action + '|' + JSON.stringify(payload);
+      if (routingCache.has(cacheKey)) return routingCache.get(cacheKey);
+
+      const response = await fetch(valhallaUrl(action, payload));
+      if (!response.ok) {
+        let message = 'HTTP ' + response.status;
+        try {
+          const errorData = await response.json();
+          message = errorData.error || errorData.status_message || message;
+        } catch (_) {}
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+      routingCache.set(cacheKey, data);
+      return data;
+    }
+
+    function decodePolyline6(encoded) {
+      const coordinates = [];
+      let index = 0;
+      let latitude = 0;
+      let longitude = 0;
+
+      while (index < encoded.length) {
+        let result = 0;
+        let shift = 0;
+        let byte;
+        do {
+          byte = encoded.charCodeAt(index++) - 63;
+          result |= (byte & 0x1f) << shift;
+          shift += 5;
+        } while (byte >= 0x20);
+        latitude += (result & 1) ? ~(result >> 1) : (result >> 1);
+
+        result = 0;
+        shift = 0;
+        do {
+          byte = encoded.charCodeAt(index++) - 63;
+          result |= (byte & 0x1f) << shift;
+          shift += 5;
+        } while (byte >= 0x20);
+        longitude += (result & 1) ? ~(result >> 1) : (result >> 1);
+
+        coordinates.push([latitude / 1e6, longitude / 1e6]);
+      }
+
+      return coordinates;
+    }
+
+    function localIsoDateTime(totalMinutes) {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setMinutes(totalMinutes);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+    }
+
+    async function getTravelMatrix(tasks, mode) {
+      const matrixMode = travelModes[mode].matrixCosting;
+      const locations = [{ lat: startLatitude, lon: startLongitude }]
+        .concat(tasks.map(task => ({ lat: task.latitude, lon: task.longitude })));
+
+      const data = await fetchValhalla('/sources_to_targets', {
+        sources: locations,
+        targets: locations,
+        costing: matrixMode,
+        units: 'kilometers',
+        verbose: false
+      });
+
+      const matrix = data.sources_to_targets;
+      if (!matrix || !Array.isArray(matrix.durations) || !Array.isArray(matrix.distances)) {
+        throw new Error('Routing-Matrix konnte nicht gelesen werden.');
+      }
+      return matrix;
+    }
+
+    function orderTasksByNetwork(tasks, matrix) {
+      let currentIndex = 0;
+      const remaining = tasks.map((task, index) => ({ task: task, matrixIndex: index + 1 }));
+      const ordered = [];
+
+      while (remaining.length > 0) {
+        let bestPosition = -1;
+        let bestDuration = Infinity;
+
+        remaining.forEach((candidate, position) => {
+          const duration = matrix.durations[currentIndex]
+            ? matrix.durations[currentIndex][candidate.matrixIndex]
+            : null;
+          if (Number.isFinite(duration) && duration < bestDuration) {
+            bestDuration = duration;
+            bestPosition = position;
+          }
+        });
+
+        if (bestPosition < 0) throw new Error('Mindestens ein ausgewählter Standort ist mit diesem Verkehrsmittel nicht erreichbar.');
+        const chosen = remaining.splice(bestPosition, 1)[0];
+        ordered.push(chosen.task);
+        currentIndex = chosen.matrixIndex;
+      }
+
+      return ordered;
+    }
+
+    async function fetchRouteLeg(from, to, mode, departureMinutes) {
+      const requestedMode = mode;
+      let usedMode = requestedMode;
+      let usedFallback = false;
+
+      async function request(costing) {
+        return fetchValhalla('/route', {
+          locations: [
+            { lat: from.latitude, lon: from.longitude },
+            { lat: to.latitude, lon: to.longitude }
+          ],
+          costing: costing,
+          units: 'kilometers',
+          language: 'de-DE',
+          date_time: { type: 1, value: localIsoDateTime(departureMinutes) },
+          directions_options: { units: 'kilometers', language: 'de-DE' }
+        });
+      }
+
+      let data;
+      try {
+        data = await request(requestedMode);
+      } catch (error) {
+        if (requestedMode !== 'multimodal') throw error;
+        data = await request('pedestrian');
+        usedMode = 'pedestrian';
+        usedFallback = true;
+      }
+
+      if (!data.trip || !data.trip.summary || !Array.isArray(data.trip.legs) || data.trip.legs.length === 0) {
+        throw new Error('Keine Routendaten erhalten.');
+      }
+
+      const leg = data.trip.legs[0];
+      const summary = leg.summary || data.trip.summary;
+      const shape = typeof leg.shape === 'string' ? decodePolyline6(leg.shape) : [];
+
+      return {
+        distanceKm: Number(summary.length),
+        travelMinutes: Math.max(1, Math.round(Number(summary.time) / 60)),
+        shape: shape,
+        usedMode: usedMode,
+        usedFallback: usedFallback
+      };
+    }
+
+    async function optimizeNetworkRoute(tasks, startMinutes, mode) {
+      const matrix = await getTravelMatrix(tasks, mode);
+      const orderedTasks = orderTasksByNetwork(tasks, matrix);
+
+      let current = { latitude: startLatitude, longitude: startLongitude };
+      let currentMinutes = startMinutes;
+      let totalDistance = 0;
+      let totalTravelMinutes = 0;
+      let totalTaskDuration = 0;
+      let transitFallbacks = 0;
+      const stops = [];
+      const pathCoordinates = [[startLatitude, startLongitude]];
+
+      for (const task of orderedTasks) {
+        const leg = await fetchRouteLeg(current, task, mode, currentMinutes);
+        const arrivalMinutes = currentMinutes + leg.travelMinutes;
+        const finishMinutes = arrivalMinutes + task.estimated_duration_min;
+
+        stops.push({
+          task: task,
+          distance: leg.distanceKm,
+          travelMinutes: leg.travelMinutes,
+          arrivalMinutes: arrivalMinutes,
+          startMinutes: arrivalMinutes,
+          finishMinutes: finishMinutes,
+          usedMode: leg.usedMode
+        });
+
+        if (leg.shape.length > 0) {
+          const points = pathCoordinates.length > 0 ? leg.shape.slice(1) : leg.shape;
+          pathCoordinates.push(...points);
+        } else {
+          pathCoordinates.push([task.latitude, task.longitude]);
+        }
+
+        if (leg.usedFallback) transitFallbacks++;
+        totalDistance += leg.distanceKm;
+        totalTravelMinutes += leg.travelMinutes;
+        totalTaskDuration += task.estimated_duration_min;
+        currentMinutes = finishMinutes;
+        current = { latitude: task.latitude, longitude: task.longitude };
+      }
+
+      return {
+        networkRouting: true,
+        mode: mode,
+        stops: stops,
+        totalDistance: totalDistance,
+        totalTravelMinutes: totalTravelMinutes,
+        totalDuration: totalTaskDuration,
+        endMinutes: currentMinutes,
+        pathCoordinates: pathCoordinates,
+        transitFallbacks: transitFallbacks
+      };
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -450,8 +720,8 @@
                       ${task.status}
                     </span>
                   </div>
-                  <p class="task-distance text-xs font-semibold text-primary mt-2">
-                    Entfernung: ${distanceText}
+                  <p class="text-[11px] text-on-surface-variant mt-2">
+                    Routenentfernung und Wegzeit werden beim Optimieren für das gewählte Verkehrsmittel berechnet.
                   </p>
                 </div>
               </div>
@@ -550,7 +820,7 @@
         + (days > 0 ? ' (+' + days + ' Tag/e)' : '');
     }
 
-    function planRoute() {
+    async function planRoute() {
       const output = document.getElementById('route-result');
       const selectedTasks = globalTasks.filter(task => selectedTaskIds.includes(task.task_id));
       if (selectedTasks.length === 0) {
@@ -580,50 +850,107 @@
       }
       const parts = time.split(':');
       const startMinutes = Number(parts[0]) * 60 + Number(parts[1]);
-      const route = optimizeRoute(validTasks, startMinutes);
-      lastPlannedRoute = route;
-      renderRoute(route, startMinutes, selectedTasks.length - openTasks.length, invalidCount);
-      if (campusMap) drawRouteOnMap(route);
+      const mode = getTravelMode();
+
+      setRouteLoading(true);
+      output.innerHTML = '<span class="text-primary font-semibold">Live-Route wird berechnet …</span>';
+
+      try {
+        const route = await optimizeNetworkRoute(validTasks, startMinutes, mode);
+        lastPlannedRoute = route;
+        renderRoute(route, startMinutes, selectedTasks.length - openTasks.length, invalidCount);
+        if (campusMap) drawRouteOnMap(route);
+      } catch (error) {
+        const fallback = optimizeRoute(validTasks, startMinutes);
+        fallback.networkRouting = false;
+        fallback.mode = mode;
+        fallback.totalTravelMinutes = null;
+        fallback.routingError = error.message;
+        lastPlannedRoute = fallback;
+        renderRoute(fallback, startMinutes, selectedTasks.length - openTasks.length, invalidCount);
+        if (campusMap) drawRouteOnMap(fallback);
+      } finally {
+        setRouteLoading(false);
+      }
     }
 
     function renderRoute(route, startMinutes, completedCount, invalidCount) {
       const output = document.getElementById('route-result');
       output.textContent = '';
+      const mode = travelModes[route.mode] || travelModes.pedestrian;
+
       const heading = document.createElement('p');
       heading.className = 'font-bold text-primary';
-      heading.textContent = 'Start: FH Technikum Wien – ' + formatTime(startMinutes);
+      heading.textContent = mode.icon + ' ' + mode.label + ' · Start FH Technikum Wien – ' + formatTime(startMinutes);
       output.appendChild(heading);
+
+      if (!route.networkRouting) {
+        const warning = document.createElement('div');
+        warning.className = 'mt-2 p-2 rounded-lg bg-error-container text-error text-xs';
+        warning.textContent = 'Live-Routing ist gerade nicht erreichbar (' + (route.routingError || 'unbekannter Fehler')
+          + '). Als sichere Rückfallebene wird nur die direkte Distanz geschätzt.';
+        output.appendChild(warning);
+      }
+
       const list = document.createElement('ol');
-      list.className = 'list-decimal pl-5 mt-2 space-y-2';
+      list.className = 'list-decimal pl-5 mt-3 space-y-3';
       for (const stop of route.stops) {
         const item = document.createElement('li');
         const title = document.createElement('strong');
         title.textContent = stop.task.title;
         const info = document.createElement('p');
-        info.className = 'text-xs text-on-surface-variant';
-        info.textContent = stop.distance.toFixed(2) + ' km (ca. Luftlinie vom vorherigen Stopp)'
-          + ' · Dauer: ' + stop.task.estimated_duration_min + ' min'
-          + ' · ' + formatTime(stop.startMinutes) + '–' + formatTime(stop.startMinutes + stop.task.estimated_duration_min);
+        info.className = 'text-xs text-on-surface-variant mt-0.5';
+
+        if (route.networkRouting) {
+          info.textContent = stop.distance.toFixed(2) + ' km · '
+            + stop.travelMinutes + ' min Wegzeit · Ankunft ' + formatTime(stop.arrivalMinutes)
+            + ' · Aufgabe ' + stop.task.estimated_duration_min + ' min · weiter ' + formatTime(stop.finishMinutes);
+        } else {
+          info.textContent = stop.distance.toFixed(2) + ' km direkte Distanz · Aufgabe '
+            + stop.task.estimated_duration_min + ' min · ab ' + formatTime(stop.startMinutes);
+        }
+
         item.appendChild(title);
         item.appendChild(info);
         list.appendChild(item);
       }
       output.appendChild(list);
-      const summary = document.createElement('p');
-      summary.className = 'font-semibold mt-3';
-      summary.textContent = route.stops.length + ' ausgewählte Route-Aufgaben · Gesamt: '
-        + route.totalDistance.toFixed(2) + ' km (ca. Luftlinie) · Aufgabendauer: '
-        + route.totalDuration + ' min · Ende: ' + formatTime(route.endMinutes);
+
+      const summary = document.createElement('div');
+      summary.className = 'mt-3 grid grid-cols-2 gap-2 text-xs';
+      const travelMinutes = route.networkRouting ? route.totalTravelMinutes : '–';
+      summary.innerHTML =
+        '<div class="p-2 rounded-lg bg-surface-container-low"><span class="text-on-surface-variant">Strecke</span><br><strong>'
+        + route.totalDistance.toFixed(2) + ' km</strong></div>'
+        + '<div class="p-2 rounded-lg bg-surface-container-low"><span class="text-on-surface-variant">Wegzeit</span><br><strong>'
+        + travelMinutes + (route.networkRouting ? ' min' : '') + '</strong></div>'
+        + '<div class="p-2 rounded-lg bg-surface-container-low"><span class="text-on-surface-variant">Aufgaben</span><br><strong>'
+        + route.totalDuration + ' min</strong></div>'
+        + '<div class="p-2 rounded-lg bg-surface-container-low"><span class="text-on-surface-variant">Fertig ca.</span><br><strong>'
+        + formatTime(route.endMinutes) + '</strong></div>';
       output.appendChild(summary);
+
       const note = document.createElement('p');
       note.className = 'text-xs text-on-surface-variant mt-2';
-      note.textContent = 'Zeiten enthalten nur die Aufgabendauer, keine Wegzeiten. Kein Rückweg zum Start. '
-        + completedCount + ' erledigte und ' + invalidCount + ' Aufgaben mit ungültigen Koordinaten übersprungen.';
+      if (route.networkRouting) {
+        note.textContent = 'Live-Routing über Valhalla/OpenStreetMap. '
+          + (route.mode === 'multimodal'
+              ? 'Bei Öffis wird die Stoppreihenfolge über die Fuß-Erreichbarkeit angenähert; die einzelnen Wege werden multimodal geroutet. '
+              : 'Die Stoppreihenfolge wird anhand realer Wegzeiten des gewählten Verkehrsmittels berechnet. ')
+          + (route.transitFallbacks > 0
+              ? route.transitFallbacks + ' Öffi-Abschnitt(e) konnten nicht multimodal berechnet werden und wurden als Fußweg geroutet. '
+              : '')
+          + 'Kein Rückweg zum Start. ';
+      } else {
+        note.textContent = 'Fallback ohne Live-Routing. Kein Rückweg zum Start. ';
+      }
+      note.textContent += completedCount + ' erledigte und ' + invalidCount
+        + ' Aufgaben mit ungültigen Koordinaten übersprungen.';
       output.appendChild(note);
 
       const mapButton = document.createElement('button');
       mapButton.type = 'button';
-      mapButton.className = 'mt-3 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold';
+      mapButton.className = 'mt-3 w-full px-4 py-2.5 bg-primary text-white rounded-xl text-xs font-bold';
       mapButton.textContent = 'Route auf Karte anzeigen';
       mapButton.onclick = function () { switchScreen('map'); };
       output.appendChild(mapButton);
