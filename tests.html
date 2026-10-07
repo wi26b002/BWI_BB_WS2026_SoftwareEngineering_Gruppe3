@@ -51,11 +51,11 @@
         try {
           const actual = check();
           item.className = 'pass';
-          item.textContent = 'PASS – ' + name + ' | Erwartet: ' + expected + ' | Tatsächlich: ' + actual;
+          item.textContent = 'BESTANDEN – ' + name + ' | Erwartet: ' + expected + ' | Tatsächlich: ' + actual;
           passed++;
         } catch (error) {
           item.className = 'fail';
-          item.textContent = 'FAIL – ' + name + ' | Erwartet: ' + expected + ' | Tatsächlich: ' + error.message;
+          item.textContent = 'FEHLER – ' + name + ' | Erwartet: ' + expected + ' | Tatsächlich: ' + error.message;
           failed++;
         }
         document.getElementById('results').appendChild(item);
@@ -125,8 +125,8 @@
         return 'nur Aufgabe 7; ausschließlich ungültige Aufgaben ergeben eine leere Route';
       });
 
-      document.getElementById('summary').textContent = (passed + failed) + ' tests · '
-        + passed + ' passed · ' + failed + ' failed';
+      document.getElementById('summary').textContent = (passed + failed) + ' Tests · '
+        + passed + ' bestanden · ' + failed + ' fehlgeschlagen';
     }
 
     const frame = document.getElementById('application');
