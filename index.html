@@ -247,6 +247,26 @@
   <!-- ==================== JAVASCRIPT: JSON FETCH & RENDER ==================== -->
   <script>
     let globalTasks = [];
+    const startLatitude = 48.2390;
+    const startLongitude = 16.3777;
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const earthRadiusKm = 6371;
+
+      // Grad in Bogenmaß umrechnen, damit die Winkelfunktionen passen.
+      const toRadians = degrees => degrees * Math.PI / 180;
+      const latitudeDifference = toRadians(lat2 - lat1);
+      const longitudeDifference = toRadians(lon2 - lon1);
+
+      // Haversine-Formel: Winkel zwischen den Punkten auf der Erdkugel.
+      const a = Math.sin(latitudeDifference / 2) ** 2
+        + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2))
+        * Math.sin(longitudeDifference / 2) ** 2;
+      const angle = 2 * Math.asin(Math.sqrt(Math.min(1, a)));
+
+      // Winkel mit dem Erdradius multiplizieren: Entfernung in Kilometern.
+      return earthRadiusKm * angle;
+    }
 
     // Liest die Datei campus_tasks.json ein und rendert sie
     async function initDataset() {
@@ -265,6 +285,7 @@
 
         // Einzelobjekte als Karten rendern
         container.innerHTML = globalTasks.map((task, index) => {
+          const distanceKm = calculateDistance(startLatitude, startLongitude, task.latitude, task.longitude);
           const isHigh = task.priority === 'High';
           const isMed = task.priority === 'Medium';
           const priorityBadge = isHigh 
@@ -304,6 +325,9 @@
                         ${task.status}
                       </span>
                     </div>
+                    <p class="task-distance text-xs font-semibold text-primary mt-2">
+                      Entfernung: ${distanceKm.toFixed(2)} km
+                    </p>
                   </div>
                 </div>
 
