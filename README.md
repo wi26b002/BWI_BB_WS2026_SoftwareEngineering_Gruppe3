@@ -7,14 +7,17 @@ CampusRoute ist eine Web-Anwendung für Studierende. Die Anwendung lädt Aufgabe
 Der Benutzer kann:
 
 - Aufgaben aus einer JSON-Datei ansehen,
-- Aufgaben für eine Route auswählen,
+- Aufgaben suchen, filtern und sortieren,
+- mehrere sichtbare Aufgaben gesammelt für eine Route auswählen,
+- entweder die FH Technikum Wien oder den eigenen Browser-Standort als Startpunkt verwenden,
 - eine Startzeit festlegen,
 - zwischen **Zu Fuß, Fahrrad, Auto und Öffis** wählen,
 - eine optimierte Reihenfolge berechnen lassen,
 - Strecke, Wegzeit und ungefähre Ankunftszeiten sehen,
 - die Route auf einer interaktiven Karte anzeigen,
-- Aufgaben als erledigt markieren,
-- Detailinformationen zu einer Aufgabe öffnen.
+- Aufgaben von **Geplant → Auf dem Weg → Erledigt** weiterführen,
+- Status und Auswahl im Browser speichern,
+- ausführliche Detailinformationen zu einer Aufgabe öffnen.
 
 ## Verwendete Technologien
 
@@ -123,7 +126,7 @@ Das bedeutet:
 - keine Benutzerkonten auf einem Server,
 - keine serverseitige Geschäftslogik.
 
-Statusänderungen gelten nur während der aktuellen Browser-Sitzung und werden nach einem Neuladen zurückgesetzt.
+Statusänderungen und die aktuelle Routenauswahl werden mit `localStorage` im Browser gespeichert und bleiben daher auch nach einem Neuladen erhalten. Es gibt trotzdem keine zentrale Datenbank und keine Synchronisation zwischen verschiedenen Geräten.
 
 ## Anwendung starten
 
@@ -179,7 +182,7 @@ Das erwartete Ergebnis ist:
 
 - Der Greedy-Algorithmus garantiert nicht die global optimale Route.
 - Priorität und Deadline beeinflussen die Routenreihenfolge derzeit nicht.
-- Änderungen am Aufgabenstatus werden nicht dauerhaft gespeichert.
+- Status und Auswahl werden nur lokal im jeweiligen Browser gespeichert; es gibt keine Synchronisation zwischen Geräten.
 - Es wird kein Rückweg zum Startpunkt berechnet.
 - Die Online-Routenberechnung benötigt Internetzugang.
 - Der verwendete öffentliche Valhalla-Dienst ist ein externer Dienst und kann zeitweise nicht erreichbar sein. In diesem Fall verwendet CampusRoute automatisch die lokale Ersatzberechnung.
@@ -203,3 +206,18 @@ Leaflet zeigt die Karte. Valhalla liefert Wegstrecken und Wegzeiten. Die Reihenf
 
 **Wie haben wir getestet?**  
 Mit einer eigenen Browser-Testseite `tests.html` und sieben definierten Testfällen für die Kernfunktionen.
+
+
+## UX-Funktionen
+
+Für eine alltagstauglichere Nutzung wurden zusätzlich folgende Funktionen umgesetzt:
+
+- responsive Desktop- und Mobile-Ansicht,
+- Suche über Titel, Beschreibung, Kategorie, Ort und Status,
+- Filter nach Kategorie und Status,
+- Sortierung nach Deadline, Priorität oder Titel,
+- Sammelauswahl der sichtbaren Aufgaben,
+- aktueller Browser-Standort als optionaler Startpunkt,
+- lokale Speicherung von Status und Routenauswahl,
+- realistische Detailansicht mit Ort, Deadline, Priorität, Dauer und Status,
+- Status-Workflow von „Geplant“ über „Auf dem Weg“ bis „Erledigt“.
