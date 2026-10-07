@@ -194,6 +194,9 @@
               <span id="badge-total-tasks" class="text-xs px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-bold">Laden...</span>
             </div>
             <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="openTaskModal()" class="px-3 py-2 rounded-lg bg-tertiary-container text-white text-xs font-semibold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">add</span> Neue Aufgabe
+              </button>
               <button type="button" onclick="selectVisibleTasks()" class="px-3 py-2 rounded-lg bg-primary text-white text-xs font-semibold">Sichtbare auswählen</button>
               <button type="button" onclick="clearSelection()" class="px-3 py-2 rounded-lg bg-surface-container-high text-primary text-xs font-semibold">Auswahl leeren</button>
             </div>
@@ -285,6 +288,7 @@
             <button id="detail-route-button" type="button" class="px-4 py-2.5 rounded-xl bg-surface-container-high text-primary font-semibold text-sm" onclick="toggleDetailTaskSelection()">Für Route auswählen</button>
             <button id="detail-status-button" type="button" class="px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm" onclick="advanceDetailTaskStatus()">Status ändern</button>
           </div>
+          <button id="detail-delete-button" type="button" class="hidden mt-1 px-4 py-2 rounded-xl bg-error-container text-error font-semibold text-sm" onclick="deleteDetailTask()">Eigene Aufgabe löschen</button>
         </div>
       </div>
 
@@ -322,6 +326,93 @@
       </div>
     </div>
   </main>
+
+  <!-- ==================== MODAL: NEUE AUFGABE ==================== -->
+  <div id="task-modal" class="hidden fixed inset-0 z-[1000] bg-black/35 backdrop-blur-sm p-4 items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
+    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-surface-container-high">
+      <div class="sticky top-0 bg-white/95 backdrop-blur px-5 py-4 border-b border-surface-container-high flex items-center justify-between">
+        <div>
+          <p class="text-xs text-on-surface-variant">CampusRoute</p>
+          <h2 id="task-modal-title" class="text-lg font-bold">Neue Aufgabe anlegen</h2>
+        </div>
+        <button type="button" onclick="closeTaskModal()" class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-outline">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form id="task-form" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4" onsubmit="createTask(event)">
+        <label class="md:col-span-2">
+          <span class="text-sm font-semibold">Titel *</span>
+          <input id="new-title" required maxlength="80" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant" placeholder="z. B. Buch in der Bibliothek abholen"/>
+        </label>
+
+        <label class="md:col-span-2">
+          <span class="text-sm font-semibold">Beschreibung</span>
+          <textarea id="new-description" rows="2" maxlength="220" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant" placeholder="Kurze Zusatzinformation"></textarea>
+        </label>
+
+        <label>
+          <span class="text-sm font-semibold">Kategorie *</span>
+          <select id="new-category" required class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant bg-white">
+            <option value="Uni">Uni</option>
+            <option value="Besorgung">Besorgung</option>
+            <option value="Retoure">Retoure</option>
+            <option value="Sonstiges">Sonstiges</option>
+          </select>
+        </label>
+
+        <label>
+          <span class="text-sm font-semibold">Priorität *</span>
+          <select id="new-priority" required class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant bg-white">
+            <option value="Low">Niedrig</option>
+            <option value="Medium" selected>Mittel</option>
+            <option value="High">Hoch</option>
+          </select>
+        </label>
+
+        <label>
+          <span class="text-sm font-semibold">Dauer in Minuten *</span>
+          <input id="new-duration" required type="number" min="0" max="600" value="15" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant"/>
+        </label>
+
+        <label>
+          <span class="text-sm font-semibold">Deadline</span>
+          <input id="new-deadline" type="datetime-local" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant"/>
+        </label>
+
+        <label class="md:col-span-2">
+          <span class="text-sm font-semibold">Ort / Bezeichnung *</span>
+          <input id="new-location-name" required maxlength="100" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant" placeholder="z. B. FH Technikum Wien"/>
+        </label>
+
+        <div class="md:col-span-2 p-3 rounded-xl bg-surface-container-low">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p class="text-sm font-semibold">Koordinaten *</p>
+              <p class="text-[11px] text-on-surface-variant">Für die Routenberechnung benötigt jede Aufgabe einen Standort.</p>
+            </div>
+            <button type="button" onclick="fillTaskLocationFromBrowser()" class="px-3 py-2 rounded-lg bg-white border border-outline-variant text-primary text-xs font-semibold">Meine Position übernehmen</button>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <label>
+              <span class="text-xs">Breitengrad</span>
+              <input id="new-latitude" required type="number" step="0.000001" min="-90" max="90" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant bg-white" placeholder="48.2390"/>
+            </label>
+            <label>
+              <span class="text-xs">Längengrad</span>
+              <input id="new-longitude" required type="number" step="0.000001" min="-180" max="180" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant bg-white" placeholder="16.3777"/>
+            </label>
+          </div>
+          <p id="new-location-message" class="text-[11px] text-on-surface-variant mt-2"></p>
+        </div>
+
+        <div class="md:col-span-2 flex flex-col sm:flex-row gap-2 pt-2">
+          <button type="button" onclick="closeTaskModal()" class="flex-1 px-4 py-2.5 rounded-xl bg-surface-container-high text-primary font-semibold">Abbrechen</button>
+          <button type="submit" class="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white font-semibold">Aufgabe speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ==================== BOTTOM NAV ==================== -->
   <nav class="fixed bottom-0 w-full md:w-[520px] md:left-1/2 md:-translate-x-1/2 md:bottom-4 md:rounded-2xl z-50 pb-safe md:pb-0 bg-surface/90 backdrop-blur-xl border-t md:border border-surface-container-high shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
@@ -428,13 +519,20 @@
         statuses: statuses,
         selectedTaskIds: selectedTaskIds,
         travelMode: travelMode,
-        startMode: document.getElementById('start-mode')?.value || 'fh'
+        startMode: document.getElementById('start-mode')?.value || 'fh',
+        localTasks: globalTasks.filter(task => task.is_local === true)
       }));
     }
 
     function restoreState() {
       try {
         const state = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        if (Array.isArray(state.localTasks)) {
+          const knownIds = new Set(globalTasks.map(task => task.task_id));
+          state.localTasks.forEach(task => {
+            if (!knownIds.has(task.task_id)) globalTasks.push(task);
+          });
+        }
         if (state.statuses) {
           globalTasks.forEach(task => {
             if (typeof state.statuses[task.task_id] === 'string') task.status = state.statuses[task.task_id];
@@ -497,6 +595,96 @@
         document.getElementById('start-mode').value = 'fh';
         resetStartPoint();
       }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
+    }
+
+    function openTaskModal() {
+      const modal = document.getElementById('task-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.getElementById('new-title').focus();
+    }
+
+    function closeTaskModal() {
+      const modal = document.getElementById('task-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.getElementById('task-form').reset();
+      document.getElementById('new-location-message').textContent = '';
+    }
+
+    function fillTaskLocationFromBrowser() {
+      const message = document.getElementById('new-location-message');
+      if (!navigator.geolocation) {
+        message.textContent = 'Standortzugriff wird von diesem Browser nicht unterstützt.';
+        return;
+      }
+      message.textContent = 'Standort wird ermittelt …';
+      navigator.geolocation.getCurrentPosition(function (position) {
+        document.getElementById('new-latitude').value = position.coords.latitude.toFixed(6);
+        document.getElementById('new-longitude').value = position.coords.longitude.toFixed(6);
+        message.textContent = 'Aktuelle Position wurde übernommen.';
+      }, function () {
+        message.textContent = 'Standort konnte nicht gelesen werden. Koordinaten bitte manuell eingeben.';
+      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
+    }
+
+    function createTask(event) {
+      event.preventDefault();
+      const title = document.getElementById('new-title').value.trim();
+      const description = document.getElementById('new-description').value.trim();
+      const category = document.getElementById('new-category').value;
+      const priority = document.getElementById('new-priority').value;
+      const duration = Number(document.getElementById('new-duration').value);
+      const deadline = document.getElementById('new-deadline').value;
+      const locationName = document.getElementById('new-location-name').value.trim();
+      const latitude = Number(document.getElementById('new-latitude').value);
+      const longitude = Number(document.getElementById('new-longitude').value);
+
+      if (!title || !locationName || !Number.isFinite(latitude) || !Number.isFinite(longitude)
+          || Math.abs(latitude) > 90 || Math.abs(longitude) > 180
+          || !Number.isInteger(duration) || duration < 0) {
+        document.getElementById('new-location-message').textContent = 'Bitte alle Pflichtfelder und Koordinaten prüfen.';
+        return;
+      }
+
+      const task = {
+        task_id: Date.now(),
+        title: title,
+        description: description || 'Eigene Aufgabe',
+        latitude: latitude,
+        longitude: longitude,
+        location_name: locationName,
+        category: category,
+        priority: priority,
+        deadline: deadline || null,
+        estimated_duration_min: duration,
+        status: 'Geplant',
+        attachment_file: null,
+        is_local: true
+      };
+
+      globalTasks.push(task);
+      selectedTaskIds.push(task.task_id);
+      populateCategoryFilter();
+      persistState();
+      closeTaskModal();
+      renderTasks();
+      if (campusMap) refreshMapMarkers();
+    }
+
+    function deleteDetailTask() {
+      if (!currentDetailTaskId) return;
+      const task = globalTasks.find(task => task.task_id === currentDetailTaskId);
+      if (!task || task.is_local !== true) return;
+      if (!confirm('Diese eigene Aufgabe wirklich löschen?')) return;
+
+      globalTasks = globalTasks.filter(task => task.task_id !== currentDetailTaskId);
+      selectedTaskIds = selectedTaskIds.filter(id => id !== currentDetailTaskId);
+      currentDetailTaskId = null;
+      populateCategoryFilter();
+      persistState();
+      renderTasks();
+      switchScreen('errands');
     }
 
     function updateMapStatus(text) {
@@ -971,6 +1159,7 @@
                     <span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary text-[10px] font-semibold">
                       ${task.category}
                     </span>
+                    ${task.is_local ? '<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-tertiary text-[10px] font-semibold">Eigene Aufgabe</span>' : ''}
                     <span class="text-[10px] text-on-surface-variant font-mono">
                       Dauer: ${task.estimated_duration_min} min
                     </span>
@@ -1272,6 +1461,9 @@
         : (task.status === 'Auf dem Weg' ? 'Als erledigt markieren' : 'Erledigt');
       statusButton.disabled = task.status === 'Erledigt';
       statusButton.classList.toggle('opacity-50', task.status === 'Erledigt');
+
+      const deleteButton = document.getElementById('detail-delete-button');
+      deleteButton.classList.toggle('hidden', task.is_local !== true);
 
       switchScreen('details');
     }
