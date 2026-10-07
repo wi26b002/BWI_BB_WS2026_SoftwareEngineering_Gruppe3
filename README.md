@@ -17,7 +17,8 @@ Der Benutzer kann:
 - die Route auf einer interaktiven Karte anzeigen,
 - Aufgaben von **Geplant → Auf dem Weg → Erledigt** weiterführen,
 - Status und Auswahl im Browser speichern,
-- ausführliche Detailinformationen zu einer Aufgabe öffnen.
+- ausführliche Detailinformationen zu einer Aufgabe öffnen,
+- eigene Aufgaben mit Titel, Kategorie, Priorität, Dauer, Deadline und Koordinaten anlegen.
 
 ## Verwendete Technologien
 
@@ -221,3 +222,10 @@ Für eine alltagstauglichere Nutzung wurden zusätzlich folgende Funktionen umge
 - lokale Speicherung von Status und Routenauswahl,
 - realistische Detailansicht mit Ort, Deadline, Priorität, Dauer und Status,
 - Status-Workflow von „Geplant“ über „Auf dem Weg“ bis „Erledigt“.
+
+
+## Eigene Aufgaben
+
+Über **„Neue Aufgabe“** können zusätzliche Aufgaben direkt in der Anwendung angelegt werden. Diese Aufgaben werden im Browser gespeichert und können wie die JSON-Aufgaben gefiltert, ausgewählt, geroutet und über den Status-Workflow bearbeitet werden.
+
+Für eigene Aufgaben werden Koordinaten benötigt. Sie können manuell eingegeben oder über **„Meine Position übernehmen“** aus dem Browser übernommen werden. Eigene Aufgaben lassen sich in der Detailansicht wieder löschen.
