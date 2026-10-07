@@ -7,10 +7,11 @@
     "longitude": 16.3776,
     "category": "Uni",
     "priority": "High",
-    "deadline": "2026-09-24T10:00:00",
+    "deadline": "2026-10-14T17:30:00",
     "estimated_duration_min": 90,
     "status": "Geplant",
-    "attachment_file": "skript_uebung.pdf"
+    "attachment_file": "skript_uebung.pdf",
+    "location_name": "FH Technikum Wien – Hauptgebäude"
   },
   {
     "task_id": 102,
@@ -20,10 +21,11 @@
     "longitude": 16.3712,
     "category": "Besorgung",
     "priority": "Medium",
-    "deadline": "2026-09-24T18:00:00",
+    "deadline": "2026-10-14T19:30:00",
     "estimated_duration_min": 10,
     "status": "Geplant",
-    "attachment_file": "gelber_zettel_barcode.png"
+    "attachment_file": "gelber_zettel_barcode.png",
+    "location_name": "Postfiliale 1200 Wien"
   },
   {
     "task_id": 103,
@@ -33,10 +35,11 @@
     "longitude": 16.3721,
     "category": "Retoure",
     "priority": "Low",
-    "deadline": "2026-09-24T19:00:00",
+    "deadline": "2026-10-15T18:00:00",
     "estimated_duration_min": 15,
     "status": "Geplant",
-    "attachment_file": "rechnung_mediamarkt.pdf"
+    "attachment_file": "rechnung_mediamarkt.pdf",
+    "location_name": "MediaMarkt Millennium City"
   },
   {
     "task_id": 104,
@@ -46,10 +49,11 @@
     "longitude": 16.3781,
     "category": "Uni",
     "priority": "Medium",
-    "deadline": "2026-09-24T16:30:00",
+    "deadline": "2026-10-14T16:30:00",
     "estimated_duration_min": 25,
     "status": "Geplant",
-    "attachment_file": null
+    "attachment_file": null,
+    "location_name": "FH Technikum Wien – Bibliothek"
   },
   {
     "task_id": 105,
@@ -59,10 +63,11 @@
     "longitude": 16.3815,
     "category": "Besorgung",
     "priority": "Low",
-    "deadline": "2026-09-24T19:30:00",
+    "deadline": "2026-10-15T19:30:00",
     "estimated_duration_min": 20,
     "status": "Geplant",
-    "attachment_file": "einkaufsliste.txt"
+    "attachment_file": "einkaufsliste.txt",
+    "location_name": "BILLA PLUS – Brigittenau"
   },
   {
     "task_id": 106,
@@ -72,10 +77,11 @@
     "longitude": 16.3769,
     "category": "Uni",
     "priority": "High",
-    "deadline": "2026-09-24T14:00:00",
+    "deadline": "2026-10-14T18:30:00",
     "estimated_duration_min": 60,
     "status": "Geplant",
-    "attachment_file": "protokoll_vorlage.docx"
+    "attachment_file": "protokoll_vorlage.docx",
+    "location_name": "FH Technikum Wien – Gruppenraum"
   },
   {
     "task_id": 107,
@@ -85,10 +91,11 @@
     "longitude": 16.3745,
     "category": "Besorgung",
     "priority": "Medium",
-    "deadline": "2026-09-24T18:00:00",
+    "deadline": "2026-10-14T19:00:00",
     "estimated_duration_min": 10,
     "status": "Geplant",
-    "attachment_file": null
+    "attachment_file": null,
+    "location_name": "Apotheke nahe Höchstädtplatz"
   },
   {
     "task_id": 108,
@@ -98,10 +105,11 @@
     "longitude": 16.3772,
     "category": "Uni",
     "priority": "Medium",
-    "deadline": "2026-09-25T12:00:00",
+    "deadline": "2026-10-06T12:00:00",
     "estimated_duration_min": 5,
     "status": "Erledigt",
-    "attachment_file": null
+    "attachment_file": null,
+    "location_name": "FH Technikum Wien – Foyer"
   },
   {
     "task_id": 109,
@@ -111,10 +119,11 @@
     "longitude": 16.3792,
     "category": "Uni",
     "priority": "Low",
-    "deadline": "2026-09-24T17:00:00",
+    "deadline": "2026-10-14T17:00:00",
     "estimated_duration_min": 15,
     "status": "Geplant",
-    "attachment_file": "lernkarten_druck.pdf"
+    "attachment_file": "lernkarten_druck.pdf",
+    "location_name": "Copyshop Jägerstraße"
   },
   {
     "task_id": 110,
@@ -124,9 +133,10 @@
     "longitude": 16.3775,
     "category": "Uni",
     "priority": "High",
-    "deadline": "2026-09-24T15:00:00",
+    "deadline": "2026-10-14T15:00:00",
     "estimated_duration_min": 5,
     "status": "Auf dem Weg",
-    "attachment_file": null
+    "attachment_file": null,
+    "location_name": "FH Technikum Wien – Infopoint"
   }
 ]
