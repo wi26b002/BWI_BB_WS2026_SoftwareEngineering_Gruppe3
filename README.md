@@ -4,7 +4,7 @@ CampusRoute helps students plan an ordered route through selected tasks around F
 
 ## Technologies and logical tiers
 
-Technologies: HTML, Vanilla JavaScript, Tailwind CSS via CDN, JSON, Leaflet, and OpenStreetMap.
+Technologies: HTML, Vanilla JavaScript, Tailwind CSS via CDN, JSON, Leaflet, OpenStreetMap, and the public Valhalla routing API.
 
 - **Presentation tier:** HTML/Tailwind user interface plus the Leaflet/OpenStreetMap map in `index.html`.
 - **Logic tier:** JavaScript data handling, Haversine distance calculation, and the greedy nearest-neighbour route algorithm in `index.html`.
@@ -24,7 +24,7 @@ python3 -m http.server 3000
 
 Then open **http://localhost:3000**. Use HTTP rather than opening the HTML file directly, so the JSON fetch works.
 
-Select tasks using the card checkboxes, enter a start time, and click **Route optimieren**. The result lists ordered stops, approximate distances, task durations, and totals. Use **Route auf Karte anzeigen** or the **Karte** tab to view all task markers and the optimized stop order on an interactive OpenStreetMap map. The completion button marks a task as **Erledigt** for the current session.
+Select tasks using the card checkboxes, enter a start time, choose **walking, bicycle, car, or public transport**, and click **Route optimieren**. For walking, bicycle, and car, the greedy stop order is based on Valhalla's network travel-time matrix. Public transport uses pedestrian reachability for the stop order because Valhalla does not provide multimodal matrices; each public-transport leg is then routed with Valhalla's multimodal routing. The result shows routed distance, travel time, task time, approximate arrival times, and totals. Use **Route auf Karte anzeigen** or the **Karte** tab to view the routed path on OpenStreetMap.
 
 ## Run the tests
 
@@ -36,9 +36,10 @@ The seven browser tests cover identical-coordinate distance, distance symmetry, 
 
 The route repeatedly chooses the nearest remaining selected, unfinished task using Haversine distance, advances the clock by the task duration, and continues from that task's coordinates. Invalid coordinates are skipped.
 
-- Haversine estimates straight-line distance over the Earth's surface (**ca. Luftlinie**), not real road routing.
+- The primary route uses Valhalla/OpenStreetMap network routing for walking, bicycle, car, and multimodal/public-transport legs. If the public routing service is unavailable, the application falls back to the local Haversine approximation instead of crashing.
 - Greedy nearest-neighbour is a heuristic, so the result is not guaranteed globally optimal.
-- Travel time is not included; displayed times include only task durations.
+- Public transport uses pedestrian reachability to determine stop order because multimodal matrices are not available; the individual legs are still requested as multimodal routes.
 - Deadlines and priorities are currently not part of route optimization.
 - Status changes last only for the current browser session and reset on reload.
-- No return journey to the start is included. The interactive map uses OpenStreetMap, but the displayed route line connects the optimized stops by straight segments; it is not road routing.
+- No return journey to the start is included.
+- The public Valhalla endpoint is a demo service with fair-use/rate limits, so internet access is required for live routing.
