@@ -55,17 +55,57 @@
       .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
       .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
     }
-    ::-webkit-scrollbar { display: none; }
+    :root { color-scheme: light; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 8% -8%, rgba(79,70,229,.12), transparent 28rem),
+        radial-gradient(circle at 92% 8%, rgba(0,110,76,.08), transparent 24rem),
+        #faf8ff;
+    }
+    h1, h2, h3, .brand-font { font-family: "Plus Jakarta Sans", Inter, sans-serif; }
+    * { box-sizing: border-box; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #c7c4d8; border-radius: 999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    button, input, select, textarea {
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease, background-color .18s ease, opacity .18s ease;
+    }
+    button:not(:disabled):active { transform: translateY(1px) scale(.99); }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #4f46e5 !important;
+      box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+    }
     .screen-container { display: none; }
-    .screen-container.active { display: flex; flex-direction: column; }
+    .screen-container.active { display: flex; flex-direction: column; animation: screenIn .18s ease-out; }
+    @keyframes screenIn { from { opacity: .35; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .app-card {
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(199,196,216,.72);
+      box-shadow: 0 10px 30px rgba(43,38,93,.055);
+    }
+    .task-card { min-height: 100%; }
+    .task-card:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(43,38,93,.095); border-color: rgba(79,70,229,.28); }
+    .task-card:has(.task-selection:checked) {
+      border-color: #4f46e5 !important;
+      box-shadow: 0 0 0 2px rgba(79,70,229,.10), 0 14px 30px rgba(43,38,93,.08);
+      background: linear-gradient(180deg, rgba(238,236,255,.9), #fff 42%);
+    }
+    .route-stop-line { width: 2px; background: linear-gradient(#4f46e5,#a5b4fc); }
     #campus-map { width: 100%; height: 100%; min-height: 560px; }
     .leaflet-container { font-family: Inter, sans-serif; }
+    @media (min-width: 1024px) {
+      #screen-map { padding-bottom: 0; }
+      #campus-map { min-height: calc(100vh - 64px); }
+    }
   </style>
 </head>
 <body class="bg-surface text-on-surface antialiased flex flex-col min-h-screen">
 
   <!-- ==================== HEADER ==================== -->
-  <header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+  <header class="fixed top-0 w-full z-50 pt-safe bg-white/82 backdrop-blur-2xl border-b border-white/70 shadow-[0_1px_18px_rgba(28,22,83,0.06)]">
     <div class="h-16 px-4 max-w-7xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="h-8 w-8 rounded-lg shadow-sm" fill="none">
@@ -76,7 +116,7 @@
           <path d="M54 44L66 32L78 44" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <div class="flex flex-col">
-          <span class="text-[17px] font-bold text-on-surface leading-none tracking-tight">CampusRoute</span>
+          <span class="brand-font text-[17px] font-bold text-on-surface leading-none tracking-tight">CampusRoute</span>
           <span id="screen-subtitle" class="text-[11px] text-on-surface-variant leading-none mt-0.5">Aufgaben & JSON-Daten</span>
         </div>
       </div>
@@ -98,9 +138,10 @@
         <div class="flex items-start justify-between gap-2">
           <div class="flex flex-col min-w-0">
             <span id="today-label" class="text-xs text-on-surface-variant">FH Technikum Wien</span>
-            <h1 class="text-2xl font-bold text-on-surface tracking-tight mt-0.5">
-              <span id="open-task-count" class="text-primary-container">...</span> offene Aufgaben
-            </h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight mt-1">Plane deinen Tag smarter.</h1>
+            <p class="text-sm text-on-surface-variant mt-1">
+              <span id="open-task-count" class="font-bold text-primary-container">...</span> offene Aufgaben warten auf dich.
+            </p>
           </div>
           <div class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container-low text-xs text-on-surface-variant">
             <span class="material-symbols-outlined text-[18px] text-primary">route</span>
@@ -117,30 +158,33 @@
       </section>
 
       <!-- Kennzahlen aus den geladenen Aufgaben -->
-      <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 my-2">
-        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
-          <p class="text-xs text-on-surface-variant">Offen</p>
-          <p id="dashboard-open-count" class="text-xl font-bold text-primary">0</p>
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 my-3">
+        <div class="app-card p-3.5 rounded-2xl flex items-center justify-between">
+          <div><p class="text-xs text-on-surface-variant">Offen</p><p id="dashboard-open-count" class="text-2xl font-bold text-primary">0</p></div>
+          <span class="material-symbols-outlined text-primary bg-primary-fixed w-10 h-10 rounded-xl flex items-center justify-center">pending_actions</span>
         </div>
-        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
-          <p class="text-xs text-on-surface-variant">Ausgewählt</p>
-          <p id="selected-task-count" class="text-xl font-bold text-secondary">0</p>
+        <div class="app-card p-3.5 rounded-2xl flex items-center justify-between">
+          <div><p class="text-xs text-on-surface-variant">Ausgewählt</p><p id="selected-task-count" class="text-2xl font-bold text-secondary">0</p></div>
+          <span class="material-symbols-outlined text-secondary bg-secondary-fixed w-10 h-10 rounded-xl flex items-center justify-center">route</span>
         </div>
-        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
-          <p class="text-xs text-on-surface-variant">Erledigt</p>
-          <p id="completed-task-count" class="text-xl font-bold text-tertiary-container">0</p>
+        <div class="app-card p-3.5 rounded-2xl flex items-center justify-between">
+          <div><p class="text-xs text-on-surface-variant">Erledigt</p><p id="completed-task-count" class="text-2xl font-bold text-tertiary-container">0</p></div>
+          <span class="material-symbols-outlined text-tertiary bg-tertiary-fixed w-10 h-10 rounded-xl flex items-center justify-center">task_alt</span>
         </div>
-        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
-          <p class="text-xs text-on-surface-variant">Gesamt</p>
-          <p id="json-record-count" class="text-xl font-bold text-on-surface">0</p>
+        <div class="app-card p-3.5 rounded-2xl flex items-center justify-between">
+          <div><p class="text-xs text-on-surface-variant">Gesamt</p><p id="json-record-count" class="text-2xl font-bold text-on-surface">0</p></div>
+          <span class="material-symbols-outlined text-primary bg-surface-container w-10 h-10 rounded-xl flex items-center justify-center">dataset</span>
         </div>
       </section>
 
       <div class="mt-3 grid grid-cols-1 lg:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.8fr)] gap-4 items-start">
-      <section class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+      <section class="app-card p-4 sm:p-5 rounded-2xl lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
         <div class="flex items-center justify-between gap-3">
           <div>
-            <h2 class="text-base font-bold">Route planen</h2>
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg font-bold">Route planen</h2>
+              <span id="planner-selection-chip" class="text-[10px] font-bold px-2 py-1 rounded-full bg-primary-fixed text-primary">0 ausgewählt</span>
+            </div>
             <p class="text-sm mt-1">Start: <strong id="start-location-label">FH Technikum Wien</strong></p>
             <p id="start-location-coords" class="text-xs text-on-surface-variant">48.2390, 16.3777</p>
           </div>
@@ -179,7 +223,7 @@
         <p id="routing-hint" class="text-xs text-on-surface-variant mt-3">
           Routenberechnung über das Straßen- und Wegenetz. Aufgaben unten auswählen; erledigte Aufgaben werden übersprungen.
         </p>
-        <button id="optimize-route" type="button" onclick="planRoute()" class="mt-3 w-full px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-50 disabled:cursor-wait">
+        <button id="optimize-route" type="button" onclick="planRoute()" class="mt-4 w-full px-4 py-3 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl text-sm font-bold shadow-[0_8px_22px_rgba(53,37,205,.22)] hover:shadow-[0_10px_28px_rgba(53,37,205,.28)] disabled:opacity-50 disabled:cursor-wait">
           Route optimieren
         </button>
         <div id="route-result" aria-live="polite" class="mt-3 text-sm"></div>
@@ -187,7 +231,7 @@
 
       <!-- Errand Cards Container (Dynamisch aus JSON befüllt) -->
       <section class="flex flex-col gap-2 min-w-0">
-        <div class="flex flex-col gap-3">
+        <div class="app-card rounded-2xl p-3 sm:p-4 flex flex-col gap-3">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div class="flex items-center gap-2">
               <h2 class="text-base font-bold text-on-surface">Aufgaben</h2>
@@ -292,7 +336,7 @@
         </div>
       </div>
 
-      <div class="fixed bottom-16 left-0 right-0 z-40 bg-surface/95 backdrop-blur-xl p-3 border-t border-surface-container-high flex gap-2">
+      <div class="px-4 mt-3 flex gap-2">
         <button class="flex-1 h-11 bg-primary text-on-primary rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md" onclick="switchScreen('errands')">
           <span class="material-symbols-outlined text-[18px]">arrow_back</span>
           <span>Zurück zur Übersicht</span>
@@ -307,18 +351,18 @@
       <div id="campus-map" class="absolute inset-0"></div>
 
       <div class="absolute top-3 left-3 right-3 flex flex-col sm:flex-row sm:justify-between gap-2 pointer-events-none" style="z-index: 500;">
-        <div class="bg-white/95 backdrop-blur rounded-xl shadow-md px-3 py-2 text-left pointer-events-auto">
+        <div class="bg-white/92 backdrop-blur-xl rounded-2xl shadow-lg border border-white/80 px-4 py-3 text-left pointer-events-auto">
           <p class="text-sm font-bold text-on-surface">Campus-Karte</p>
           <p id="map-status" class="text-[11px] text-on-surface-variant">Aufgaben werden geladen …</p>
         </div>
-        <div class="bg-white/95 backdrop-blur rounded-xl shadow-md px-3 py-2 text-[10px] text-on-surface-variant text-left">
+        <div class="bg-white/92 backdrop-blur-xl rounded-2xl shadow-lg border border-white/80 px-4 py-3 text-[10px] text-on-surface-variant text-left">
           <p><span class="inline-block w-2 h-2 rounded-full bg-primary-container mr-1"></span> offen</p>
           <p><span class="inline-block w-2 h-2 rounded-full bg-secondary-container mr-1"></span> ausgewählt</p>
           <p><span class="inline-block w-2 h-2 rounded-full bg-tertiary-container mr-1"></span> erledigt</p>
         </div>
       </div>
 
-      <div class="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur rounded-xl shadow-md p-3 text-left" style="z-index: 500;">
+      <div class="absolute bottom-4 left-4 right-4 sm:right-auto sm:max-w-xl bg-white/92 backdrop-blur-xl rounded-2xl shadow-lg border border-white/80 p-3 text-left" style="z-index: 500;">
         <p class="text-xs font-semibold text-on-surface">OpenStreetMap + Leaflet + Valhalla</p>
         <p class="text-[11px] text-on-surface-variant">
           Die Route folgt dem Wegenetz für das gewählte Verkehrsmittel. Ist der Online-Routendienst nicht erreichbar, verwendet die App automatisch eine lokale Näherung.
@@ -329,7 +373,7 @@
 
   <!-- ==================== MODAL: NEUE AUFGABE ==================== -->
   <div id="task-modal" class="hidden fixed inset-0 z-[1000] bg-black/35 backdrop-blur-sm p-4 items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
-    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-surface-container-high">
+    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-[0_28px_80px_rgba(19,27,46,.24)] border border-white">
       <div class="sticky top-0 bg-white/95 backdrop-blur px-5 py-4 border-b border-surface-container-high flex items-center justify-between">
         <div>
           <p class="text-xs text-on-surface-variant">CampusRoute</p>
@@ -414,8 +458,10 @@
     </div>
   </div>
 
+  <div id="toast" class="fixed z-[1200] left-1/2 -translate-x-1/2 bottom-24 hidden max-w-[calc(100vw-2rem)] px-4 py-3 rounded-xl bg-on-surface text-white shadow-xl text-sm font-medium"></div>
+
   <!-- ==================== BOTTOM NAV ==================== -->
-  <nav class="fixed bottom-0 w-full md:w-[520px] md:left-1/2 md:-translate-x-1/2 md:bottom-4 md:rounded-2xl z-50 pb-safe md:pb-0 bg-surface/90 backdrop-blur-xl border-t md:border border-surface-container-high shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
+  <nav class="fixed bottom-0 w-full md:w-[520px] md:left-1/2 md:-translate-x-1/2 md:bottom-4 md:rounded-2xl z-50 pb-safe md:pb-0 bg-white/88 backdrop-blur-2xl border-t md:border border-white/80 shadow-[0_-4px_24px_rgba(28,22,83,0.10)]">
     <div class="flex justify-around items-center h-16 px-2">
       <button onclick="switchScreen('map')" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-primary transition-colors py-1" data-target="map">
         <span class="material-symbols-outlined text-[22px]">map</span>
@@ -462,6 +508,14 @@
       multimodal: { label: 'Öffis', icon: '🚇', matrixCosting: 'pedestrian' }
     };
 
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(function () { toast.classList.add('hidden'); }, 2400);
+    }
 
     function priorityLabel(priority) {
       if (priority === 'High') return 'Hoch';
@@ -669,6 +723,7 @@
       persistState();
       closeTaskModal();
       renderTasks();
+      showToast('Aufgabe gespeichert und zur Route hinzugefügt.');
       if (campusMap) refreshMapMarkers();
     }
 
@@ -684,6 +739,7 @@
       populateCategoryFilter();
       persistState();
       renderTasks();
+      showToast('Eigene Aufgabe gelöscht.');
       switchScreen('errands');
     }
 
@@ -1067,6 +1123,7 @@
       document.getElementById('open-task-count').innerText = open;
       document.getElementById('dashboard-open-count').innerText = open;
       document.getElementById('selected-task-count').innerText = selectedTaskIds.length;
+      document.getElementById('planner-selection-chip').innerText = selectedTaskIds.length + ' ausgewählt';
       document.getElementById('completed-task-count').innerText = completed;
     }
 
@@ -1130,6 +1187,16 @@
       const container = document.getElementById('json-task-container');
       const visibleTasks = getVisibleTasks();
       document.getElementById('filter-summary').textContent = visibleTasks.length + ' von ' + globalTasks.length + ' Aufgaben sichtbar';
+      if (visibleTasks.length === 0) {
+        container.innerHTML = '<div class="xl:col-span-2 app-card rounded-2xl p-10 text-center">'
+          + '<span class="material-symbols-outlined text-[42px] text-outline">search_off</span>'
+          + '<h3 class="font-bold mt-2">Keine Aufgaben gefunden</h3>'
+          + '<p class="text-sm text-on-surface-variant mt-1">Passe Suche oder Filter an – oder lege eine neue Aufgabe an.</p>'
+          + '<button type="button" onclick="openTaskModal()" class="mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold">Neue Aufgabe</button>'
+          + '</div>';
+        if (campusMap) refreshMapMarkers();
+        return;
+      }
       // Einzelobjekte als Karten rendern
       container.innerHTML = visibleTasks.map((task, index) => {
         const validCoordinates = hasValidCoordinates(task);
@@ -1145,7 +1212,7 @@
           : (isMed ? 'bg-secondary-fixed text-on-secondary-fixed' : 'bg-surface-container text-on-surface-variant');
 
         return `
-          <article class="task-card flex flex-col p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high transition-all" data-id="${task.task_id}">
+          <article class="task-card app-card flex flex-col p-3.5 bg-surface-container-lowest rounded-2xl transition-all" data-id="${task.task_id}">
             <div class="flex items-start justify-between gap-2">
               <div class="flex items-start gap-2.5 min-w-0">
                 <span class="w-6 h-6 rounded-full bg-primary-container text-on-primary text-xs font-bold flex items-center justify-center shrink-0">
@@ -1242,6 +1309,7 @@
       const task = globalTasks.find(task => task.task_id === taskId);
       if (!task || task.status === 'Erledigt') return;
       task.status = task.status === 'Geplant' ? 'Auf dem Weg' : 'Erledigt';
+      showToast(task.status === 'Auf dem Weg' ? 'Aufgabe gestartet.' : 'Aufgabe als erledigt markiert.');
       if (task.status === 'Erledigt') selectedTaskIds = selectedTaskIds.filter(id => id !== taskId);
       persistState();
       clearRouteResult();
@@ -1368,41 +1436,50 @@
         output.appendChild(warning);
       }
 
-      const list = document.createElement('ol');
-      list.className = 'list-decimal pl-5 mt-3 space-y-3';
-      for (const stop of route.stops) {
-        const item = document.createElement('li');
-        const title = document.createElement('strong');
+      const list = document.createElement('div');
+      list.className = 'mt-3 space-y-0';
+      route.stops.forEach(function (stop, index) {
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-[32px_1fr] gap-3';
+        const rail = document.createElement('div');
+        rail.className = 'flex flex-col items-center';
+        rail.innerHTML = '<div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-[11px] font-bold shadow-sm">'
+          + (index + 1) + '</div>'
+          + (index < route.stops.length - 1 ? '<div class="route-stop-line flex-1 min-h-8 my-1"></div>' : '');
+        const card = document.createElement('div');
+        card.className = 'pb-3';
+        const title = document.createElement('p');
+        title.className = 'font-semibold text-sm text-on-surface';
         title.textContent = stop.task.title;
         const info = document.createElement('p');
-        info.className = 'text-xs text-on-surface-variant mt-0.5';
-
+        info.className = 'text-[11px] text-on-surface-variant mt-1 leading-relaxed';
         if (route.networkRouting) {
-          info.textContent = stop.distance.toFixed(2) + ' km · '
-            + stop.travelMinutes + ' min Wegzeit · Ankunft ' + formatTime(stop.arrivalMinutes)
-            + ' · Aufgabe ' + stop.task.estimated_duration_min + ' min · weiter ' + formatTime(stop.finishMinutes);
+          info.textContent = stop.distance.toFixed(2) + ' km · ' + stop.travelMinutes + ' min Fahrt'
+            + ' · Ankunft ' + formatTime(stop.arrivalMinutes)
+            + ' · ' + stop.task.estimated_duration_min + ' min vor Ort';
         } else {
-          info.textContent = stop.distance.toFixed(2) + ' km direkte Distanz · Aufgabe '
-            + stop.task.estimated_duration_min + ' min · ab ' + formatTime(stop.startMinutes);
+          info.textContent = stop.distance.toFixed(2) + ' km direkte Distanz'
+            + ' · ' + stop.task.estimated_duration_min + ' min vor Ort';
         }
-
-        item.appendChild(title);
-        item.appendChild(info);
-        list.appendChild(item);
-      }
+        card.appendChild(title);
+        card.appendChild(info);
+        row.appendChild(rail);
+        row.appendChild(card);
+        list.appendChild(row);
+      });
       output.appendChild(list);
 
       const summary = document.createElement('div');
       summary.className = 'mt-3 grid grid-cols-2 gap-2 text-xs';
       const travelMinutes = route.networkRouting ? route.totalTravelMinutes : '–';
       summary.innerHTML =
-        '<div class="p-2 rounded-lg bg-surface-container-low"><span class="text-on-surface-variant">Strecke</span><br><strong>'
+        '<div class="p-3 rounded-xl bg-surface-container-low border border-surface-container-high"><span class="text-on-surface-variant">Strecke</span><br><strong class="text-sm">'
         + route.totalDistance.toFixed(2) + ' km</strong></div>'
-        + '<div class="p-2 rounded-lg bg-surface-container-low"><span class="text-on-surface-variant">Wegzeit</span><br><strong>'
+        + '<div class="p-3 rounded-xl bg-surface-container-low border border-surface-container-high"><span class="text-on-surface-variant">Wegzeit</span><br><strong class="text-sm">'
         + travelMinutes + (route.networkRouting ? ' min' : '') + '</strong></div>'
-        + '<div class="p-2 rounded-lg bg-surface-container-low"><span class="text-on-surface-variant">Aufgaben</span><br><strong>'
+        + '<div class="p-3 rounded-xl bg-surface-container-low border border-surface-container-high"><span class="text-on-surface-variant">Aufgaben</span><br><strong class="text-sm">'
         + route.totalDuration + ' min</strong></div>'
-        + '<div class="p-2 rounded-lg bg-surface-container-low"><span class="text-on-surface-variant">Fertig ca.</span><br><strong>'
+        + '<div class="p-3 rounded-xl bg-surface-container-low border border-surface-container-high"><span class="text-on-surface-variant">Fertig ca.</span><br><strong class="text-sm">'
         + formatTime(route.endMinutes) + '</strong></div>';
       output.appendChild(summary);
 
@@ -1426,7 +1503,7 @@
 
       const mapButton = document.createElement('button');
       mapButton.type = 'button';
-      mapButton.className = 'mt-3 w-full px-4 py-2.5 bg-primary text-white rounded-xl text-xs font-bold';
+      mapButton.className = 'mt-3 w-full px-4 py-2.5 bg-on-surface text-white rounded-xl text-xs font-bold hover:bg-primary';
       mapButton.textContent = 'Route auf Karte anzeigen';
       mapButton.onclick = function () { switchScreen('map'); };
       output.appendChild(mapButton);
@@ -1514,6 +1591,14 @@
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') closeTaskModal();
+    });
+
+    document.getElementById('task-modal').addEventListener('click', function (event) {
+      if (event.target === this) closeTaskModal();
+    });
 
     // Beim Laden der Seite JSON einlesen
     initDataset();
