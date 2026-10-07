@@ -4,13 +4,13 @@ CampusRoute helps students plan an ordered route through selected tasks around F
 
 ## Technologies and logical tiers
 
-Technologies: HTML, Vanilla JavaScript, Tailwind CSS via CDN, and JSON.
+Technologies: HTML, Vanilla JavaScript, Tailwind CSS via CDN, JSON, Leaflet, and OpenStreetMap.
 
-- **Presentation tier:** HTML/Tailwind user interface in `index.html`.
+- **Presentation tier:** HTML/Tailwind user interface plus the Leaflet/OpenStreetMap map in `index.html`.
 - **Logic tier:** JavaScript data handling, Haversine distance calculation, and the greedy nearest-neighbour route algorithm in `index.html`.
 - **Data tier:** `campus_tasks.json`.
 
-These are logical tiers within a static browser application. There is **no application backend or database**. A local HTTP server only serves the files. No npm, framework, or build step is required. Internet access is needed for Tailwind CDN and Google Fonts.
+These are logical tiers within a static browser application. There is **no application backend or database**. A local HTTP server only serves the files. No npm, framework, or build step is required. Internet access is needed for Tailwind CDN, Google Fonts, Leaflet CDN, and OpenStreetMap map tiles.
 
 ## Run the application
 
@@ -24,7 +24,7 @@ python3 -m http.server 3000
 
 Then open **http://localhost:3000**. Use HTTP rather than opening the HTML file directly, so the JSON fetch works.
 
-Select tasks using the card checkboxes, enter a start time, and click **Route optimieren**. The result lists ordered stops, approximate distances, task durations, and totals. The completion button marks a task as **Erledigt** for the current session.
+Select tasks using the card checkboxes, enter a start time, and click **Route optimieren**. The result lists ordered stops, approximate distances, task durations, and totals. Use **Route auf Karte anzeigen** or the **Karte** tab to view all task markers and the optimized stop order on an interactive OpenStreetMap map. The completion button marks a task as **Erledigt** for the current session.
 
 ## Run the tests
 
@@ -41,4 +41,4 @@ The route repeatedly chooses the nearest remaining selected, unfinished task usi
 - Travel time is not included; displayed times include only task durations.
 - Deadlines and priorities are currently not part of route optimization.
 - Status changes last only for the current browser session and reset on reload.
-- No return journey to the start is included. The map view is a placeholder, not a real map.
+- No return journey to the start is included. The interactive map uses OpenStreetMap, but the displayed route line connects the optimized stops by straight segments; it is not road routing.
