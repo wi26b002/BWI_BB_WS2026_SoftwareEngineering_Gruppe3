@@ -97,7 +97,7 @@
       <section class="flex flex-col gap-2 pt-3 pb-2">
         <div class="flex items-start justify-between gap-2">
           <div class="flex flex-col min-w-0">
-            <span class="text-xs text-on-surface-variant">WS 2026 • FH Technikum Wien</span>
+            <span id="today-label" class="text-xs text-on-surface-variant">FH Technikum Wien</span>
             <h1 class="text-2xl font-bold text-on-surface tracking-tight mt-0.5">
               <span id="open-task-count" class="text-primary-container">...</span> offene Aufgaben
             </h1>
@@ -117,18 +117,22 @@
       </section>
 
       <!-- Kennzahlen aus den geladenen Aufgaben -->
-      <section class="grid grid-cols-3 gap-2.5 my-2">
-        <div class="p-2.5 bg-surface-container-lowest rounded-xl shadow-sm">
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 my-2">
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
           <p class="text-xs text-on-surface-variant">Offen</p>
-          <p id="dashboard-open-count" class="text-lg font-bold text-primary">0</p>
+          <p id="dashboard-open-count" class="text-xl font-bold text-primary">0</p>
         </div>
-        <div class="p-2.5 bg-surface-container-lowest rounded-xl shadow-sm">
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
+          <p class="text-xs text-on-surface-variant">Ausgewählt</p>
+          <p id="selected-task-count" class="text-xl font-bold text-secondary">0</p>
+        </div>
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
           <p class="text-xs text-on-surface-variant">Erledigt</p>
-          <p id="completed-task-count" class="text-lg font-bold text-tertiary-container">0</p>
+          <p id="completed-task-count" class="text-xl font-bold text-tertiary-container">0</p>
         </div>
-        <div class="p-2.5 bg-surface-container-lowest rounded-xl shadow-sm">
-          <p class="text-xs text-on-surface-variant">Geladen</p>
-          <p id="json-record-count" class="text-lg font-bold text-primary">0</p>
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high">
+          <p class="text-xs text-on-surface-variant">Gesamt</p>
+          <p id="json-record-count" class="text-xl font-bold text-on-surface">0</p>
         </div>
       </section>
 
@@ -137,20 +141,33 @@
         <div class="flex items-center justify-between gap-3">
           <div>
             <h2 class="text-base font-bold">Route planen</h2>
-            <p class="text-sm mt-1">Start: <strong>FH Technikum Wien</strong></p>
-            <p class="text-xs text-on-surface-variant">48.2390, 16.3777</p>
+            <p class="text-sm mt-1">Start: <strong id="start-location-label">FH Technikum Wien</strong></p>
+            <p id="start-location-coords" class="text-xs text-on-surface-variant">48.2390, 16.3777</p>
           </div>
           <span class="material-symbols-outlined text-primary text-[28px]">route</span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 mt-4">
           <div>
+            <label for="start-mode" class="block text-sm font-semibold">Startpunkt</label>
+            <div class="mt-1 grid grid-cols-[1fr_auto] gap-2">
+              <select id="start-mode" class="w-full p-2.5 rounded-lg border border-outline-variant bg-white" onchange="changeStartMode(this.value)">
+                <option value="fh">FH Technikum Wien</option>
+                <option value="current">Mein Standort</option>
+              </select>
+              <button id="locate-button" type="button" onclick="useCurrentLocation()" class="px-3 rounded-lg border border-outline-variant bg-white text-primary hover:bg-surface-container-high" title="Aktuellen Standort verwenden">
+                <span class="material-symbols-outlined text-[20px]">my_location</span>
+              </button>
+            </div>
+            <p id="location-message" class="text-[11px] text-on-surface-variant mt-1"></p>
+          </div>
+          <div>
             <label for="start-time" class="block text-sm font-semibold">Startzeit</label>
             <input id="start-time" type="time" required class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant bg-white" onchange="clearRouteResult()"/>
           </div>
           <div>
             <label for="travel-mode" class="block text-sm font-semibold">Verkehrsmittel</label>
-            <select id="travel-mode" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant bg-white" onchange="clearRouteResult(); refreshMapMarkers();">
+            <select id="travel-mode" class="mt-1 w-full p-2.5 rounded-lg border border-outline-variant bg-white" onchange="clearRouteResult(); persistState(); refreshMapMarkers();">
               <option value="pedestrian">🚶 Zu Fuß</option>
               <option value="bicycle">🚲 Fahrrad</option>
               <option value="auto">🚗 Auto</option>
@@ -170,13 +187,41 @@
 
       <!-- Errand Cards Container (Dynamisch aus JSON befüllt) -->
       <section class="flex flex-col gap-2 min-w-0">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <h2 class="text-base font-bold text-on-surface">Importierte JSON-Aufgaben</h2>
-            <span id="badge-total-tasks" class="text-xs px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-bold">Laden...</span>
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-on-surface">Aufgaben</h2>
+              <span id="badge-total-tasks" class="text-xs px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-bold">Laden...</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="selectVisibleTasks()" class="px-3 py-2 rounded-lg bg-primary text-white text-xs font-semibold">Sichtbare auswählen</button>
+              <button type="button" onclick="clearSelection()" class="px-3 py-2 rounded-lg bg-surface-container-high text-primary text-xs font-semibold">Auswahl leeren</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2">
+            <label class="xl:col-span-2 relative">
+              <span class="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-outline">search</span>
+              <input id="task-search" type="search" placeholder="Aufgaben suchen …" class="w-full pl-9 pr-3 py-2.5 rounded-lg border border-outline-variant bg-white text-sm" oninput="renderTasks()"/>
+            </label>
+            <select id="filter-category" class="p-2.5 rounded-lg border border-outline-variant bg-white text-sm" onchange="renderTasks()">
+              <option value="">Alle Kategorien</option>
+            </select>
+            <select id="filter-status" class="p-2.5 rounded-lg border border-outline-variant bg-white text-sm" onchange="renderTasks()">
+              <option value="">Alle Status</option>
+              <option value="Geplant">Geplant</option>
+              <option value="Auf dem Weg">Auf dem Weg</option>
+              <option value="Erledigt">Erledigt</option>
+            </select>
+            <select id="sort-tasks" class="p-2.5 rounded-lg border border-outline-variant bg-white text-sm" onchange="renderTasks()">
+              <option value="deadline">Nach Deadline</option>
+              <option value="priority">Nach Priorität</option>
+              <option value="title">Nach Titel</option>
+            </select>
           </div>
         </div>
 
+        <div id="filter-summary" class="text-xs text-on-surface-variant"></div>
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-2.5 mt-1" id="json-task-container">
           <!-- Dynamischer Inhalt aus campus_tasks.json wird hier per JS eingefügt -->
         </div>
@@ -197,16 +242,48 @@
       </div>
 
       <div class="px-4 flex flex-col gap-3 mt-3">
-        <div class="bg-surface-container-lowest rounded-xl p-3.5 shadow-sm flex flex-col gap-2">
-          <span class="text-xs text-on-surface-variant font-semibold">Beschreibung</span>
-          <p id="detail-desc" class="text-sm text-on-surface">Wähle in der Aufgabenübersicht bei einer Aufgabe „Details“, um die Informationen hier anzuzeigen.</p>
-          <div class="flex justify-between items-center pt-2 border-t border-surface-container-high text-xs text-on-surface-variant">
-            <span>Koordinaten:</span>
-            <span id="detail-coords" class="font-mono text-primary font-semibold">—</span>
+        <div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col gap-3 border border-surface-container-high">
+          <div>
+            <span class="text-xs text-on-surface-variant font-semibold">Beschreibung</span>
+            <p id="detail-desc" class="text-sm text-on-surface mt-1">Wähle in der Aufgabenübersicht bei einer Aufgabe „Details“, um die Informationen hier anzuzeigen.</p>
           </div>
-          <div class="flex justify-between items-center text-xs text-on-surface-variant">
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <div class="p-3 rounded-lg bg-surface-container-low">
+              <span class="text-[11px] text-on-surface-variant">Status</span>
+              <p id="detail-status" class="font-semibold">—</p>
+            </div>
+            <div class="p-3 rounded-lg bg-surface-container-low">
+              <span class="text-[11px] text-on-surface-variant">Priorität</span>
+              <p id="detail-priority" class="font-semibold">—</p>
+            </div>
+            <div class="p-3 rounded-lg bg-surface-container-low">
+              <span class="text-[11px] text-on-surface-variant">Kategorie</span>
+              <p id="detail-category" class="font-semibold">—</p>
+            </div>
+            <div class="p-3 rounded-lg bg-surface-container-low">
+              <span class="text-[11px] text-on-surface-variant">Dauer</span>
+              <p id="detail-duration" class="font-semibold">—</p>
+            </div>
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-surface-container-high text-xs text-on-surface-variant gap-3">
+            <span>Ort:</span>
+            <span id="detail-location" class="font-semibold text-right">—</span>
+          </div>
+          <div class="flex justify-between items-center text-xs text-on-surface-variant gap-3">
+            <span>Deadline:</span>
+            <span id="detail-deadline" class="font-semibold text-right">—</span>
+          </div>
+          <div class="flex justify-between items-center text-xs text-on-surface-variant gap-3">
+            <span>Koordinaten:</span>
+            <span id="detail-coords" class="font-mono text-primary font-semibold text-right">—</span>
+          </div>
+          <div class="flex justify-between items-center text-xs text-on-surface-variant gap-3">
             <span>Angehängte Datei:</span>
-            <span id="detail-file" class="font-semibold text-secondary">—</span>
+            <span id="detail-file" class="font-semibold text-secondary text-right">—</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+            <button id="detail-route-button" type="button" class="px-4 py-2.5 rounded-xl bg-surface-container-high text-primary font-semibold text-sm" onclick="toggleDetailTaskSelection()">Für Route auswählen</button>
+            <button id="detail-status-button" type="button" class="px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm" onclick="advanceDetailTaskStatus()">Status ändern</button>
           </div>
         </div>
       </div>
@@ -277,10 +354,15 @@
     let taskMarkersLayer = null;
     let routeLayer = null;
     let lastPlannedRoute = null;
+    let currentDetailTaskId = null;
     const routingCache = new Map();
     const routingApiBase = 'https://valhalla1.openstreetmap.de';
+    const storageKey = 'campusroute-state-v2';
     const startLatitude = 48.2390;
     const startLongitude = 16.3777;
+    let routeStartLatitude = startLatitude;
+    let routeStartLongitude = startLongitude;
+    let routeStartLabel = 'FH Technikum Wien';
 
     const travelModes = {
       pedestrian: { label: 'Zu Fuß', icon: '🚶', matrixCosting: 'pedestrian' },
@@ -290,6 +372,133 @@
     };
 
 
+    function priorityLabel(priority) {
+      if (priority === 'High') return 'Hoch';
+      if (priority === 'Medium') return 'Mittel';
+      return 'Niedrig';
+    }
+
+    function priorityValue(priority) {
+      if (priority === 'High') return 3;
+      if (priority === 'Medium') return 2;
+      return 1;
+    }
+
+    function formatDeadline(deadline) {
+      if (!deadline) return 'Keine Deadline';
+      const date = new Date(deadline);
+      if (Number.isNaN(date.getTime())) return 'Ungültige Deadline';
+      return new Intl.DateTimeFormat('de-AT', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }).format(date);
+    }
+
+    function deadlineState(deadline) {
+      if (!deadline) return { text: 'Keine Deadline', className: 'text-on-surface-variant' };
+      const date = new Date(deadline);
+      if (Number.isNaN(date.getTime())) return { text: 'Deadline prüfen', className: 'text-error' };
+      const diff = date.getTime() - Date.now();
+      if (diff < 0) return { text: 'Überfällig', className: 'text-error' };
+      if (diff < 24 * 60 * 60 * 1000) return { text: 'Heute fällig', className: 'text-secondary' };
+      if (diff < 48 * 60 * 60 * 1000) return { text: 'Morgen fällig', className: 'text-secondary' };
+      return { text: formatDeadline(deadline), className: 'text-on-surface-variant' };
+    }
+
+    function setDefaultStartTime() {
+      const input = document.getElementById('start-time');
+      if (!input || input.value) return;
+      const now = new Date();
+      input.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    }
+
+    function updateTodayLabel() {
+      const label = document.getElementById('today-label');
+      if (!label) return;
+      label.textContent = new Intl.DateTimeFormat('de-AT', {
+        weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+      }).format(new Date()) + ' • FH Technikum Wien';
+    }
+
+    function persistState() {
+      const statuses = {};
+      globalTasks.forEach(task => { statuses[task.task_id] = task.status; });
+      const travelMode = document.getElementById('travel-mode')?.value || 'pedestrian';
+      localStorage.setItem(storageKey, JSON.stringify({
+        statuses: statuses,
+        selectedTaskIds: selectedTaskIds,
+        travelMode: travelMode,
+        startMode: document.getElementById('start-mode')?.value || 'fh'
+      }));
+    }
+
+    function restoreState() {
+      try {
+        const state = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        if (state.statuses) {
+          globalTasks.forEach(task => {
+            if (typeof state.statuses[task.task_id] === 'string') task.status = state.statuses[task.task_id];
+          });
+        }
+        if (Array.isArray(state.selectedTaskIds)) {
+          selectedTaskIds = state.selectedTaskIds.filter(id => globalTasks.some(task => task.task_id === id));
+        }
+        if (state.travelMode && travelModes[state.travelMode]) {
+          document.getElementById('travel-mode').value = state.travelMode;
+        }
+      } catch (_) {}
+    }
+
+    function resetStartPoint() {
+      routeStartLatitude = startLatitude;
+      routeStartLongitude = startLongitude;
+      routeStartLabel = 'FH Technikum Wien';
+      document.getElementById('start-location-label').textContent = routeStartLabel;
+      document.getElementById('start-location-coords').textContent = routeStartLatitude.toFixed(4) + ', ' + routeStartLongitude.toFixed(4);
+      document.getElementById('location-message').textContent = '';
+      clearRouteResult();
+      if (campusMap) {
+        refreshMapMarkers();
+        campusMap.setView([routeStartLatitude, routeStartLongitude], 15);
+      }
+    }
+
+    function changeStartMode(mode) {
+      if (mode === 'current') useCurrentLocation();
+      else resetStartPoint();
+      persistState();
+    }
+
+    function useCurrentLocation() {
+      const message = document.getElementById('location-message');
+      if (!navigator.geolocation) {
+        message.textContent = 'Standortzugriff wird von diesem Browser nicht unterstützt.';
+        document.getElementById('start-mode').value = 'fh';
+        return;
+      }
+
+      message.textContent = 'Standort wird ermittelt …';
+      navigator.geolocation.getCurrentPosition(function (position) {
+        routeStartLatitude = position.coords.latitude;
+        routeStartLongitude = position.coords.longitude;
+        routeStartLabel = 'Mein Standort';
+        document.getElementById('start-mode').value = 'current';
+        document.getElementById('start-location-label').textContent = routeStartLabel;
+        document.getElementById('start-location-coords').textContent = routeStartLatitude.toFixed(5) + ', ' + routeStartLongitude.toFixed(5);
+        message.textContent = 'Aktueller Standort wird als Startpunkt verwendet.';
+        clearRouteResult();
+        persistState();
+        if (campusMap) {
+          refreshMapMarkers();
+          campusMap.setView([routeStartLatitude, routeStartLongitude], 15);
+        }
+      }, function () {
+        message.textContent = 'Standort konnte nicht gelesen werden. FH Technikum bleibt Startpunkt.';
+        document.getElementById('start-mode').value = 'fh';
+        resetStartPoint();
+      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
+    }
+
     function updateMapStatus(text) {
       const status = document.getElementById('map-status');
       if (status) status.textContent = text;
@@ -298,7 +507,7 @@
     function ensureMap() {
       if (campusMap || typeof L === 'undefined') return;
 
-      campusMap = L.map('campus-map').setView([startLatitude, startLongitude], 15);
+      campusMap = L.map('campus-map').setView([routeStartLatitude, routeStartLongitude], 15);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
@@ -316,13 +525,13 @@
       if (!campusMap || !taskMarkersLayer) return;
       taskMarkersLayer.clearLayers();
 
-      L.circleMarker([startLatitude, startLongitude], {
+      L.circleMarker([routeStartLatitude, routeStartLongitude], {
         radius: 9,
         color: '#ffffff',
         weight: 3,
         fillColor: '#3525cd',
         fillOpacity: 1
-      }).addTo(taskMarkersLayer).bindPopup('<strong>Start: FH Technikum Wien</strong><br>48.2390, 16.3777');
+      }).addTo(taskMarkersLayer).bindPopup('<strong>Start: ' + routeStartLabel + '</strong><br>' + routeStartLatitude.toFixed(5) + ', ' + routeStartLongitude.toFixed(5));
 
       for (const task of globalTasks) {
         if (!hasValidCoordinates(task)) continue;
@@ -357,7 +566,7 @@
         return;
       }
 
-      const fallbackPoints = [[startLatitude, startLongitude]];
+      const fallbackPoints = [[routeStartLatitude, routeStartLongitude]];
       for (const stop of route.stops) fallbackPoints.push([stop.task.latitude, stop.task.longitude]);
       const points = route.pathCoordinates && route.pathCoordinates.length > 1
         ? route.pathCoordinates
@@ -474,7 +683,7 @@
 
     async function getTravelMatrix(tasks, mode) {
       const matrixMode = travelModes[mode].matrixCosting;
-      const locations = [{ lat: startLatitude, lon: startLongitude }]
+      const locations = [{ lat: routeStartLatitude, lon: routeStartLongitude }]
         .concat(tasks.map(task => ({ lat: task.latitude, lon: task.longitude })));
 
       const data = await fetchValhalla('/sources_to_targets', {
@@ -570,14 +779,14 @@
       const matrix = await getTravelMatrix(tasks, mode);
       const orderedTasks = orderTasksByNetwork(tasks, matrix);
 
-      let current = { latitude: startLatitude, longitude: startLongitude };
+      let current = { latitude: routeStartLatitude, longitude: routeStartLongitude };
       let currentMinutes = startMinutes;
       let totalDistance = 0;
       let totalTravelMinutes = 0;
       let totalTaskDuration = 0;
       let transitFallbacks = 0;
       const stops = [];
-      const pathCoordinates = [[startLatitude, startLongitude]];
+      const pathCoordinates = [[routeStartLatitude, routeStartLongitude]];
 
       for (const task of orderedTasks) {
         const leg = await fetchRouteLeg(current, task, mode, currentMinutes);
@@ -650,6 +859,10 @@
         globalTasks = await response.json();
 
         if (!Array.isArray(globalTasks)) throw new Error('Die JSON-Datei muss eine Aufgabenliste enthalten.');
+        restoreState();
+        populateCategoryFilter();
+        setDefaultStartTime();
+        updateTodayLabel();
         renderTasks();
       } catch (err) {
         container.textContent = 'Fehler beim Laden von campus_tasks.json: ' + err.message
@@ -665,6 +878,7 @@
       document.getElementById('nav-badge-count').innerText = open;
       document.getElementById('open-task-count').innerText = open;
       document.getElementById('dashboard-open-count').innerText = open;
+      document.getElementById('selected-task-count').innerText = selectedTaskIds.length;
       document.getElementById('completed-task-count').innerText = completed;
     }
 
@@ -673,17 +887,71 @@
         && Math.abs(task.latitude) <= 90 && Math.abs(task.longitude) <= 180;
     }
 
+    function populateCategoryFilter() {
+      const select = document.getElementById('filter-category');
+      if (!select) return;
+      const categories = [...new Set(globalTasks.map(task => task.category).filter(Boolean))].sort();
+      select.innerHTML = '<option value="">Alle Kategorien</option>'
+        + categories.map(category => '<option value="' + category + '">' + category + '</option>').join('');
+    }
+
+    function getVisibleTasks() {
+      const search = (document.getElementById('task-search')?.value || '').trim().toLowerCase();
+      const category = document.getElementById('filter-category')?.value || '';
+      const status = document.getElementById('filter-status')?.value || '';
+      const sortBy = document.getElementById('sort-tasks')?.value || 'deadline';
+
+      const tasks = globalTasks.filter(task => {
+        const searchText = [task.title, task.description, task.category, task.location_name, task.status]
+          .filter(Boolean).join(' ').toLowerCase();
+        return (!search || searchText.includes(search))
+          && (!category || task.category === category)
+          && (!status || task.status === status);
+      });
+
+      tasks.sort((a, b) => {
+        if (sortBy === 'priority') return priorityValue(b.priority) - priorityValue(a.priority);
+        if (sortBy === 'title') return a.title.localeCompare(b.title, 'de');
+        const aTime = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const bTime = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        return aTime - bTime;
+      });
+
+      return tasks;
+    }
+
+    function selectVisibleTasks() {
+      const visible = getVisibleTasks().filter(task => task.status !== 'Erledigt' && hasValidCoordinates(task));
+      visible.forEach(task => {
+        if (!selectedTaskIds.includes(task.task_id)) selectedTaskIds.push(task.task_id);
+      });
+      persistState();
+      clearRouteResult();
+      renderTasks();
+    }
+
+    function clearSelection() {
+      selectedTaskIds = [];
+      persistState();
+      clearRouteResult();
+      renderTasks();
+    }
+
     function renderTasks() {
       updateCounters();
       const container = document.getElementById('json-task-container');
+      const visibleTasks = getVisibleTasks();
+      document.getElementById('filter-summary').textContent = visibleTasks.length + ' von ' + globalTasks.length + ' Aufgaben sichtbar';
       // Einzelobjekte als Karten rendern
-      container.innerHTML = globalTasks.map((task, index) => {
+      container.innerHTML = visibleTasks.map((task, index) => {
         const validCoordinates = hasValidCoordinates(task);
         const distanceText = validCoordinates
           ? calculateDistance(startLatitude, startLongitude, task.latitude, task.longitude).toFixed(2) + ' km (ca. Luftlinie)'
           : 'nicht verfügbar – ungültige Koordinaten';
         const isHigh = task.priority === 'High';
         const isMed = task.priority === 'Medium';
+        const deadlineInfo = deadlineState(task.deadline);
+        const locationText = task.location_name || 'Standort aus Koordinaten';
         const priorityBadge = isHigh
           ? 'bg-error-container text-error'
           : (isMed ? 'bg-secondary-fixed text-on-secondary-fixed' : 'bg-surface-container text-on-surface-variant');
@@ -698,7 +966,7 @@
                 <div class="flex flex-col min-w-0">
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="px-2 py-0.5 rounded-full ${priorityBadge} text-[10px] font-bold">
-                      ${task.priority} Prio
+                      ${priorityLabel(task.priority)} Prio
                     </span>
                     <span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary text-[10px] font-semibold">
                       ${task.category}
@@ -710,7 +978,9 @@
 
                   <h3 class="text-sm font-semibold text-on-surface mt-1 truncate ${task.status === 'Erledigt' ? 'line-through' : ''}">${task.title}</h3>
                   <p class="text-xs text-on-surface-variant mt-0.5 line-clamp-1">${task.description}</p>
-
+                  <p class="text-[11px] text-on-surface-variant mt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">location_on</span>${locationText}
+                  </p>
                   <div class="flex items-center gap-3 mt-2 text-on-surface-variant text-[11px]">
                     <span class="flex items-center gap-1">
                       <span class="material-symbols-outlined text-[14px] text-primary">pin_drop</span>
@@ -721,14 +991,15 @@
                       ${task.status}
                     </span>
                   </div>
-                  <p class="text-[11px] text-on-surface-variant mt-2">
-                    Routenentfernung und Wegzeit werden beim Optimieren für das gewählte Verkehrsmittel berechnet.
-                  </p>
+                  <div class="flex flex-wrap items-center gap-2 mt-2 text-[11px]">
+                    <span class="${deadlineInfo.className} font-semibold">⏱ ${deadlineInfo.text}</span>
+                    <span class="text-on-surface-variant">• ${formatDeadline(task.deadline)}</span>
+                  </div>
                 </div>
               </div>
 
-              <button type="button" onclick="completeTask(${task.task_id})" aria-label="Aufgabe als erledigt markieren" ${task.status === 'Erledigt' ? 'disabled' : ''} class="check-btn w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-outline hover:bg-tertiary-container hover:text-white transition-all shrink-0">
-                <span class="material-symbols-outlined text-[18px]">check</span>
+              <button type="button" onclick="advanceTaskStatus(${task.task_id})" aria-label="Status ändern" ${task.status === 'Erledigt' ? 'disabled' : ''} class="check-btn min-w-9 h-9 px-2 rounded-lg bg-surface-container flex items-center justify-center text-outline hover:bg-tertiary-container hover:text-white transition-all shrink-0" title="${task.status === 'Geplant' ? 'Aufgabe starten' : (task.status === 'Auf dem Weg' ? 'Als erledigt markieren' : 'Erledigt')}">
+                <span class="material-symbols-outlined text-[18px]">${task.status === 'Geplant' ? 'play_arrow' : 'check'}</span>
               </button>
             </div>
 
@@ -761,7 +1032,9 @@
     function selectTask(taskId, checked) {
       if (checked && !selectedTaskIds.includes(taskId)) selectedTaskIds.push(taskId);
       if (!checked) selectedTaskIds = selectedTaskIds.filter(id => id !== taskId);
+      persistState();
       clearRouteResult();
+      renderTasks();
       if (campusMap) refreshMapMarkers();
     }
 
@@ -769,9 +1042,22 @@
       const task = globalTasks.find(task => task.task_id === taskId);
       if (!task) return;
       task.status = 'Erledigt';
+      selectedTaskIds = selectedTaskIds.filter(id => id !== taskId);
+      persistState();
       renderTasks();
-      // Eine alte Route ist nach einer Statusänderung nicht mehr aktuell.
       clearRouteResult();
+      if (currentDetailTaskId === taskId) showTaskDetail(taskId);
+    }
+
+    function advanceTaskStatus(taskId) {
+      const task = globalTasks.find(task => task.task_id === taskId);
+      if (!task || task.status === 'Erledigt') return;
+      task.status = task.status === 'Geplant' ? 'Auf dem Weg' : 'Erledigt';
+      if (task.status === 'Erledigt') selectedTaskIds = selectedTaskIds.filter(id => id !== taskId);
+      persistState();
+      clearRouteResult();
+      renderTasks();
+      if (currentDetailTaskId === taskId) showTaskDetail(taskId);
     }
 
     function findNearestTask(latitude, longitude, tasks) {
@@ -791,8 +1077,8 @@
     function optimizeRoute(tasks, startMinutes) {
       // Mit einer Kopie arbeiten: Die Reihenfolge im Datensatz bleibt erhalten.
       let remaining = tasks.filter(task => task.status !== 'Erledigt' && hasValidCoordinates(task));
-      let latitude = startLatitude;
-      let longitude = startLongitude;
+      let latitude = routeStartLatitude;
+      let longitude = routeStartLongitude;
       let currentMinutes = startMinutes;
       let totalDistance = 0;
       let totalDuration = 0;
@@ -882,7 +1168,7 @@
 
       const heading = document.createElement('p');
       heading.className = 'font-bold text-primary';
-      heading.textContent = mode.icon + ' ' + mode.label + ' · Start FH Technikum Wien – ' + formatTime(startMinutes);
+      heading.textContent = mode.icon + ' ' + mode.label + ' · Start ' + routeStartLabel + ' – ' + formatTime(startMinutes);
       output.appendChild(heading);
 
       if (!route.networkRouting) {
@@ -961,14 +1247,47 @@
     function showTaskDetail(taskId) {
       const task = globalTasks.find(t => t.task_id === taskId);
       if (!task) return;
+      currentDetailTaskId = taskId;
 
       document.getElementById('detail-task-id').innerText = 'ID: #' + task.task_id;
       document.getElementById('detail-title').innerText = task.title;
       document.getElementById('detail-desc').innerText = task.description;
-      document.getElementById('detail-coords').innerText = `${task.latitude}, ${task.longitude}`;
+      document.getElementById('detail-status').innerText = task.status;
+      document.getElementById('detail-priority').innerText = priorityLabel(task.priority);
+      document.getElementById('detail-category').innerText = task.category || '—';
+      document.getElementById('detail-duration').innerText = task.estimated_duration_min + ' min';
+      document.getElementById('detail-location').innerText = task.location_name || 'Standort aus Koordinaten';
+      document.getElementById('detail-deadline').innerText = formatDeadline(task.deadline);
+      document.getElementById('detail-coords').innerText = task.latitude + ', ' + task.longitude;
       document.getElementById('detail-file').innerText = task.attachment_file || 'Kein Anhang vorhanden';
 
+      const routeButton = document.getElementById('detail-route-button');
+      const selected = selectedTaskIds.includes(taskId);
+      routeButton.textContent = selected ? 'Aus Route entfernen' : 'Für Route auswählen';
+      routeButton.disabled = task.status === 'Erledigt';
+      routeButton.classList.toggle('opacity-50', task.status === 'Erledigt');
+
+      const statusButton = document.getElementById('detail-status-button');
+      statusButton.textContent = task.status === 'Geplant' ? 'Aufgabe starten'
+        : (task.status === 'Auf dem Weg' ? 'Als erledigt markieren' : 'Erledigt');
+      statusButton.disabled = task.status === 'Erledigt';
+      statusButton.classList.toggle('opacity-50', task.status === 'Erledigt');
+
       switchScreen('details');
+    }
+
+    function toggleDetailTaskSelection() {
+      if (!currentDetailTaskId) return;
+      const task = globalTasks.find(task => task.task_id === currentDetailTaskId);
+      if (!task || task.status === 'Erledigt') return;
+      const selected = selectedTaskIds.includes(currentDetailTaskId);
+      selectTask(currentDetailTaskId, !selected);
+      showTaskDetail(currentDetailTaskId);
+    }
+
+    function advanceDetailTaskStatus() {
+      if (!currentDetailTaskId) return;
+      advanceTaskStatus(currentDetailTaskId);
     }
 
     // Bildschirm-Umschalter
