@@ -1,45 +1,205 @@
-# CampusRoute – Location-Based Student Task Optimizer
+# CampusRoute – Aufgaben- und Routenplaner
 
-CampusRoute helps students plan an ordered route through selected tasks around FH Technikum Wien. It loads 10 tasks from JSON, displays approximate distances, and plans a route from FH Technikum Wien (48.2390, 16.3777) using a chosen start time. Completed tasks are excluded; dashboard counters reflect the current task statuses.
+## Projektidee
 
-## Technologies and logical tiers
+CampusRoute ist eine Web-Anwendung für Studierende. Die Anwendung lädt Aufgaben aus einer JSON-Datei, zeigt sie übersichtlich an und plant eine sinnvolle Reihenfolge für ausgewählte Aufgaben rund um die FH Technikum Wien.
 
-Technologies: HTML, Vanilla JavaScript, Tailwind CSS via CDN, JSON, Leaflet, OpenStreetMap, and the public Valhalla routing API.
+Der Benutzer kann:
 
-- **Presentation tier:** HTML/Tailwind user interface plus the Leaflet/OpenStreetMap map in `index.html`.
-- **Logic tier:** JavaScript data handling, Haversine distance calculation, and the greedy nearest-neighbour route algorithm in `index.html`.
-- **Data tier:** `campus_tasks.json`.
+- Aufgaben aus einer JSON-Datei ansehen,
+- Aufgaben für eine Route auswählen,
+- eine Startzeit festlegen,
+- zwischen **Zu Fuß, Fahrrad, Auto und Öffis** wählen,
+- eine optimierte Reihenfolge berechnen lassen,
+- Strecke, Wegzeit und ungefähre Ankunftszeiten sehen,
+- die Route auf einer interaktiven Karte anzeigen,
+- Aufgaben als erledigt markieren,
+- Detailinformationen zu einer Aufgabe öffnen.
 
-These are logical tiers within a static browser application. There is **no application backend or database**. A local HTTP server only serves the files. No npm, framework, or build step is required. Internet access is needed for Tailwind CDN, Google Fonts, Leaflet CDN, OpenStreetMap map tiles, and live Valhalla routing.
+## Verwendete Technologien
 
-## Run the application
+- **HTML** – Aufbau der Benutzeroberfläche
+- **Tailwind CSS** – Gestaltung und responsives Layout
+- **Vanilla JavaScript** – Logik der Anwendung
+- **JSON** – Speicherung der Aufgabendaten
+- **Leaflet** – Darstellung der interaktiven Karte
+- **OpenStreetMap** – Kartendaten
+- **Valhalla** – Berechnung von Wegen und Fahrzeiten
 
-Recommended: open the repository folder in Visual Studio Code, install/use the **Live Server** extension, and open `index.html` with Live Server. Use the address shown by the extension (its default port is usually 5500).
+Es werden **kein Framework, kein npm, keine Datenbank und kein eigener Backend-Server** benötigt.
 
-Alternative: run this command **from the repository root**, where `index.html` and `campus_tasks.json` are located:
+## Die drei logischen Schichten
 
-```sh
+### 1. Darstellungsschicht
+
+Die Darstellungsschicht ist das, was der Benutzer sieht und bedient.
+
+Bei CampusRoute sind das:
+
+- Aufgabenübersicht
+- Routenplaner
+- Detailansicht
+- Karte
+- Buttons, Auswahlfelder und Statusanzeigen
+
+Sie befindet sich hauptsächlich in `index.html`.
+
+### 2. Logikschicht
+
+Die Logikschicht verarbeitet die Daten.
+
+Wichtige Funktionen sind zum Beispiel:
+
+- `calculateDistance()` – berechnet eine direkte Entfernung mit der Haversine-Formel
+- `findNearestTask()` – sucht die nächste passende Aufgabe
+- `optimizeRoute()` – lokale Ersatzberechnung
+- `optimizeNetworkRoute()` – optimiert die Route mit echten Wegzeiten
+- `planRoute()` – verbindet Eingabe, Algorithmus und Ausgabe
+
+### 3. Datenschicht
+
+Die Aufgabendaten liegen in:
+
+`campus_tasks.json`
+
+Jede Aufgabe enthält zum Beispiel:
+
+- ID
+- Titel
+- Beschreibung
+- Koordinaten
+- Kategorie
+- Priorität
+- Dauer
+- Status
+- optional eine Datei
+
+## Wie funktioniert der Algorithmus?
+
+CampusRoute verwendet einen **Greedy-/Nearest-Neighbour-Ansatz**.
+
+Vereinfacht:
+
+1. Startpunkt ist die FH Technikum Wien.
+2. Alle ausgewählten und noch offenen Aufgaben werden betrachtet.
+3. Für das gewählte Verkehrsmittel werden Wegzeiten zwischen den Standorten berechnet.
+4. Die aktuell am schnellsten erreichbare Aufgabe wird als nächster Stopp gewählt.
+5. Dieser Standort wird zum neuen Ausgangspunkt.
+6. Der Vorgang wird wiederholt, bis alle ausgewählten Aufgaben eingeplant sind.
+
+Der Algorithmus ist einfach und gut nachvollziehbar. Er liefert eine sinnvolle Route, garantiert aber nicht mathematisch die weltweit kürzestmögliche Gesamtroute.
+
+### Warum gibt es zusätzlich die Haversine-Formel?
+
+Die Haversine-Funktion berechnet die direkte Entfernung zwischen zwei geografischen Koordinaten.
+
+Sie wird:
+
+- in den Tests geprüft,
+- als lokale Ersatzberechnung verwendet, falls der Online-Routendienst nicht erreichbar ist.
+
+## Verkehrsmittel
+
+CampusRoute unterstützt:
+
+- 🚶 Zu Fuß
+- 🚲 Fahrrad
+- 🚗 Auto
+- 🚇 Öffis
+
+Für **Zu Fuß, Fahrrad und Auto** wird die Stoppreihenfolge anhand der berechneten Wegzeiten optimiert.
+
+Bei **Öffis** wird die Reihenfolge näherungsweise über die Erreichbarkeit zu Fuß bestimmt. Die einzelnen Strecken werden anschließend multimodal berechnet.
+
+## Backend
+
+CampusRoute hat **kein eigenes Backend**.
+
+Der lokale HTTP-Server dient nur dazu, die statischen Dateien auszuliefern, damit der Browser die JSON-Datei laden kann.
+
+Das bedeutet:
+
+- keine Datenbank,
+- keine Benutzerkonten auf einem Server,
+- keine serverseitige Geschäftslogik.
+
+Statusänderungen gelten nur während der aktuellen Browser-Sitzung und werden nach einem Neuladen zurückgesetzt.
+
+## Anwendung starten
+
+### Variante 1 – Visual Studio Code mit Live Server
+
+1. Projektordner in Visual Studio Code öffnen.
+2. Die Erweiterung **Live Server** verwenden.
+3. `index.html` mit Live Server öffnen.
+
+### Variante 2 – Python
+
+Im Projektordner:
+
+```bash
 python3 -m http.server 3000
 ```
 
-Then open **http://localhost:3000**. Use HTTP rather than opening the HTML file directly, so the JSON fetch works.
+Danach im Browser öffnen:
 
-Select tasks using the card checkboxes, enter a start time, choose **walking, bicycle, car, or public transport**, and click **Route optimieren**. For walking, bicycle, and car, the greedy stop order is based on Valhalla's network travel-time matrix. Public transport uses pedestrian reachability for the stop order because Valhalla does not provide multimodal matrices; each public-transport leg is then routed with Valhalla's multimodal routing. The result shows routed distance, travel time, task time, approximate arrival times, and totals. Use **Route auf Karte anzeigen** or the **Karte** tab to view the routed path on OpenStreetMap.
+```text
+http://localhost:3000
+```
 
-## Run the tests
+Die Anwendung sollte nicht direkt über `file://` geöffnet werden, weil sonst das Laden von `campus_tasks.json` blockiert werden kann.
 
-Open **`/tests.html` through the same server** (for Python: http://localhost:3000/tests.html). The page displays PASS/FAIL, expected and actual results, and a summary. Reload to repeat.
+Für Karte und Online-Routenberechnung ist eine Internetverbindung notwendig.
 
-The seven browser tests cover identical-coordinate distance, distance symmetry, nearest-task selection, a single-task route, exclusion of completed tasks, an empty route, and safe handling of invalid coordinates. They call the application's actual functions through a hidden iframe; no external test framework is used.
+## Tests ausführen
 
-## Algorithm and limitations
+Über denselben lokalen Server öffnen:
 
-The primary route planner uses a greedy nearest-neighbour strategy over a Valhalla travel-time matrix: from the current point it chooses the reachable remaining task with the lowest estimated network travel time for the selected mode, then repeats from that task. The Haversine function remains as a tested local fallback if live routing is unavailable. Invalid coordinates and completed tasks are skipped.
+```text
+http://localhost:3000/tests.html
+```
 
-- The primary route uses Valhalla/OpenStreetMap network routing for walking, bicycle, car, and multimodal/public-transport legs. If the public routing service is unavailable, the application falls back to the local Haversine approximation instead of crashing.
-- Greedy nearest-neighbour is a heuristic, so the result is not guaranteed globally optimal.
-- Public transport uses pedestrian reachability to determine stop order because multimodal matrices are not available; the individual legs are still requested as multimodal routes.
-- Deadlines and priorities are currently not part of route optimization.
-- Status changes last only for the current browser session and reset on reload.
-- No return journey to the start is included.
-- The public Valhalla endpoint is a demo service with fair-use/rate limits, so internet access is required for live routing.
+Die Testseite prüft sieben Fälle:
+
+1. Identische Koordinaten ergeben ungefähr 0 km.
+2. Entfernung A → B entspricht B → A.
+3. Die nächstgelegene Aufgabe wird erkannt.
+4. Eine Route mit genau einer Aufgabe funktioniert.
+5. Erledigte Aufgaben werden ausgeschlossen.
+6. Eine leere Aufgabenliste verursacht keinen Absturz.
+7. Ungültige Koordinaten werden sicher behandelt.
+
+Das erwartete Ergebnis ist:
+
+```text
+7 Tests · 7 bestanden · 0 fehlgeschlagen
+```
+
+## Bekannte Einschränkungen
+
+- Der Greedy-Algorithmus garantiert nicht die global optimale Route.
+- Priorität und Deadline beeinflussen die Routenreihenfolge derzeit nicht.
+- Änderungen am Aufgabenstatus werden nicht dauerhaft gespeichert.
+- Es wird kein Rückweg zum Startpunkt berechnet.
+- Die Online-Routenberechnung benötigt Internetzugang.
+- Der verwendete öffentliche Valhalla-Dienst ist ein externer Dienst und kann zeitweise nicht erreichbar sein. In diesem Fall verwendet CampusRoute automatisch die lokale Ersatzberechnung.
+
+## Kurz erklärt für die Präsentation
+
+**Was macht CampusRoute?**  
+CampusRoute lädt Aufgaben aus JSON und plant eine sinnvolle Reihenfolge für mehrere Standorte.
+
+**Wo sind die drei Schichten?**  
+Darstellung = HTML/Tailwind/Leaflet, Logik = JavaScript-Algorithmen, Daten = `campus_tasks.json`.
+
+**Gibt es ein Backend?**  
+Nein. Die Anwendung läuft vollständig im Browser. Der lokale Server liefert nur Dateien aus.
+
+**Was ist unser eigener Algorithmus?**  
+Ein Greedy-/Nearest-Neighbour-Algorithmus: Von der aktuellen Position wird immer die am besten erreichbare nächste Aufgabe gewählt.
+
+**Was machen Leaflet und Valhalla?**  
+Leaflet zeigt die Karte. Valhalla liefert Wegstrecken und Wegzeiten. Die Reihenfolge der Aufgaben wird weiterhin von unserer JavaScript-Logik bestimmt.
+
+**Wie haben wir getestet?**  
+Mit einer eigenen Browser-Testseite `tests.html` und sieben definierten Testfällen für die Kernfunktionen.
