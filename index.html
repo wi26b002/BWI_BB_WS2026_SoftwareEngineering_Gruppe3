@@ -5,15 +5,19 @@
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
   <title>CampusRoute – Aufgaben- und Routenplaner</title>
   
+  <!-- Diese Dateien laden nur Schriftarten und Icons. Sie enthalten keine eigene CampusRoute-Logik. -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet"/>
   
+  <!-- Leaflet zeichnet die Karte. Tailwind hilft uns beim Aussehen der Oberfläche. -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    // Hier legen wir unsere Farben für Tailwind fest.
+    // Dadurch verwenden Buttons, Karten und Texte überall dieselben Farben.
     tailwind.config = {
       darkMode: "class",
       theme: {
@@ -49,14 +53,17 @@
     };
   </script>
   <style>
+    /* Grundregeln für die ganze Seite: volle Breite, keine unnötigen Außenabstände. */
     @layer base {
       html, body { width: 100vw; margin: 0; padding: 0; }
       body { overscroll-behavior-y: none; min-height: 100vh; }
       .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
       .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
     }
+    /* Die App verwendet absichtlich ein helles Farbschema. */
     :root { color-scheme: light; }
     html { scroll-behavior: smooth; }
+    /* Allgemeines Aussehen des Seitenhintergrunds und der Standardschrift. */
     body {
       font-family: Inter, system-ui, sans-serif;
       background:
@@ -69,6 +76,7 @@
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-thumb { background: #c7c4d8; border-radius: 999px; }
     ::-webkit-scrollbar-track { background: transparent; }
+    /* Buttons und Eingabefelder reagieren etwas weicher auf Maus und Tastatur. */
     button, input, select, textarea {
       transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease, background-color .18s ease, opacity .18s ease;
     }
@@ -78,14 +86,17 @@
       border-color: #4f46e5 !important;
       box-shadow: 0 0 0 3px rgba(79,70,229,.12);
     }
+    /* Es ist immer nur einer unserer drei Bereiche sichtbar: Aufgaben, Details oder Karte. */
     .screen-container { display: none; }
     .screen-container.active { display: flex; flex-direction: column; animation: screenIn .18s ease-out; }
     @keyframes screenIn { from { opacity: .35; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    /* Wiederverwendbares Aussehen für weiße Karten im Dashboard. */
     .app-card {
       background: rgba(255,255,255,.92);
       border: 1px solid rgba(199,196,216,.72);
       box-shadow: 0 10px 30px rgba(43,38,93,.055);
     }
+    /* Aufgabe-Karten werden beim Darüberfahren bzw. bei Auswahl hervorgehoben. */
     .task-card { min-height: 100%; }
     .task-card:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(43,38,93,.095); border-color: rgba(79,70,229,.28); }
     .task-card:has(.task-selection:checked) {
@@ -94,6 +105,7 @@
       background: linear-gradient(180deg, rgba(238,236,255,.9), #fff 42%);
     }
     .route-stop-line { width: 2px; background: linear-gradient(#4f46e5,#a5b4fc); }
+    /* Die Kartenfläche bekommt genug Höhe, damit sie auch am Desktop gut nutzbar ist. */
     #campus-map { width: 100%; height: 100%; min-height: 560px; }
     .leaflet-container { font-family: Inter, sans-serif; }
     @media (min-width: 1024px) {
@@ -104,7 +116,7 @@
 </head>
 <body class="bg-surface text-on-surface antialiased flex flex-col min-h-screen">
 
-  <!-- ==================== HEADER ==================== -->
+  <!-- KOPFZEILE: Logo, App-Name und kleine Benutzeranzeige. -->
   <header class="fixed top-0 w-full z-50 pt-safe bg-white/82 backdrop-blur-2xl border-b border-white/70 shadow-[0_1px_18px_rgba(28,22,83,0.06)]">
     <div class="h-16 px-4 max-w-7xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-2">
@@ -129,11 +141,11 @@
     </div>
   </header>
 
-  <!-- ==================== SCREEN 1: ERRANDS DASHBOARD (LÄDT JSON) ==================== -->
+  <!-- AUFGABENBEREICH: Hier sieht man Aufgaben, Filter und die Routenplanung. -->
   <main id="screen-errands" class="screen-container active flex-1 w-full pt-16 pb-24 bg-surface">
     <div class="flex flex-col w-full max-w-7xl mx-auto pb-6 px-4 sm:px-6 lg:px-8">
       
-      <!-- Welcome Header -->
+      <!-- Begrüßung und kurzer Überblick über den aktuellen Tag. -->
       <section class="flex flex-col gap-2 pt-3 pb-2">
         <div class="flex items-start justify-between gap-2">
           <div class="flex flex-col min-w-0">
@@ -229,7 +241,7 @@
         <div id="route-result" aria-live="polite" class="mt-3 text-sm"></div>
       </section>
 
-      <!-- Errand Cards Container (Dynamisch aus JSON befüllt) -->
+      <!-- Aufgabenliste: Diese Karten werden später mit JavaScript aus den geladenen Daten gebaut. -->
       <section class="flex flex-col gap-2 min-w-0">
         <div class="app-card rounded-2xl p-3 sm:p-4 flex flex-col gap-3">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -277,7 +289,7 @@
     </div>
   </main>
 
-  <!-- ==================== SCREEN 2: TASK DETAILS ==================== -->
+  <!-- DETAILBEREICH: Zeigt alle Informationen zu genau einer ausgewählten Aufgabe. -->
   <main id="screen-details" class="screen-container flex-1 w-full pt-16 pb-28 bg-surface">
     <div class="flex flex-col w-full max-w-4xl mx-auto pb-10">
       <div class="px-4 pt-3 pb-3 bg-surface-container-low flex flex-col gap-2 shadow-sm">
@@ -345,7 +357,7 @@
     </div>
   </main>
 
-  <!-- ==================== SCREEN 3: MAP ==================== -->
+  <!-- KARTENBEREICH: Leaflet zeigt hier Startpunkt, Aufgaben und die berechnete Route. -->
   <main id="screen-map" class="screen-container flex-1 w-full pt-16 pb-20 bg-surface">
     <div class="relative w-full h-[calc(100vh-140px)] min-h-[560px] overflow-hidden bg-surface-container-low">
       <div id="campus-map" class="absolute inset-0"></div>
@@ -371,7 +383,7 @@
     </div>
   </main>
 
-  <!-- ==================== MODAL: NEUE AUFGABE ==================== -->
+  <!-- FENSTER FÜR NEUE AUFGABE: Das Formular liegt über der normalen Seite. -->
   <div id="task-modal" class="hidden fixed inset-0 z-[1000] bg-black/35 backdrop-blur-sm p-4 items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
     <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-[0_28px_80px_rgba(19,27,46,.24)] border border-white">
       <div class="sticky top-0 bg-white/95 backdrop-blur px-5 py-4 border-b border-surface-container-high flex items-center justify-between">
@@ -460,7 +472,7 @@
 
   <div id="toast" class="fixed z-[1200] left-1/2 -translate-x-1/2 bottom-24 hidden max-w-[calc(100vw-2rem)] px-4 py-3 rounded-xl bg-on-surface text-white shadow-xl text-sm font-medium"></div>
 
-  <!-- ==================== BOTTOM NAV ==================== -->
+  <!-- UNTERE NAVIGATION: Damit wechselt man zwischen Karte, Aufgaben und Details. -->
   <nav class="fixed bottom-0 w-full md:w-[520px] md:left-1/2 md:-translate-x-1/2 md:bottom-4 md:rounded-2xl z-50 pb-safe md:pb-0 bg-white/88 backdrop-blur-2xl border-t md:border border-white/80 shadow-[0_-4px_24px_rgba(28,22,83,0.10)]">
     <div class="flex justify-around items-center h-16 px-2">
       <button onclick="switchScreen('map')" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-on-surface-variant hover:text-primary transition-colors py-1" data-target="map">
@@ -483,8 +495,13 @@
     </div>
   </nav>
 
-  <!-- ==================== JAVASCRIPT: JSON FETCH & RENDER ==================== -->
-  <!-- Drei logische Ebenen: Data Layer -> Business Layer -> Presentation Layer -->
+  <!-- JAVASCRIPT-DATEIEN: Die Logik ist bewusst in drei einfache Ebenen aufgeteilt. -->
+  <!--
+    Reihenfolge ist wichtig:
+    1. Data Layer kennt die Datenquellen.
+    2. Business Layer rechnet und entscheidet.
+    3. Presentation Layer zeigt alles auf der Seite an.
+  -->
   <script src="./data-layer.js"></script>
   <script src="./business-layer.js"></script>
   <script src="./presentation-layer.js"></script>
