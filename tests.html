@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>CampusRoute – Algorithmus-Tests</title>
   <style>
+    /* Nur ein sehr einfaches Aussehen für die Testseite. Grün = bestanden, Rot = Fehler. */
     body { font-family: sans-serif; max-width: 850px; margin: 2rem auto; padding: 0 1rem; }
     li { margin-bottom: 1rem; }
     .pass { color: #006e4c; }
@@ -20,13 +21,17 @@
   <p id="summary" aria-live="polite">Tests werden geladen …</p>
   <ol id="results"></ol>
 
+  <!-- Die Tests laden dieselbe Data- und Business-Layer wie die echte Anwendung. -->
   <script src="./data-layer.js"></script>
   <script src="./business-layer.js"></script>
   <script>
+    // Kleine Hilfsfunktion: Wenn eine erwartete Bedingung falsch ist, gilt der Test als fehlgeschlagen.
     function assert(condition, message) {
       if (!condition) throw new Error(message);
     }
 
+    // Bei Kommazahlen vergleichen wir nicht auf die allerletzte Nachkommastelle,
+    // sondern erlauben einen winzig kleinen Unterschied.
     function approximatelyEqual(first, second) {
       return Math.abs(first - second) < 0.000001;
     }
@@ -42,10 +47,12 @@
       };
     }
 
+    // Führt alle Tests nacheinander aus und zählt, wie viele bestanden wurden.
     function runTests(app) {
       let passed = 0;
       let failed = 0;
 
+      // Diese Hilfsfunktion führt genau einen Test aus und schreibt das Ergebnis auf die Seite.
       function test(name, expected, check) {
         const item = document.createElement('li');
         try {
@@ -61,12 +68,14 @@
         document.getElementById('results').appendChild(item);
       }
 
+      // Test 1: Ein Punkt verglichen mit sich selbst muss 0 km Entfernung ergeben.
       test('Identische Koordinaten', 'ungefähr 0 km', function () {
         const distance = app.calculateDistance(48.2390, 16.3777, 48.2390, 16.3777);
         assert(approximatelyEqual(distance, 0), distance + ' km');
         return distance + ' km';
       });
 
+      // Test 2: Die Entfernung von A nach B muss gleich sein wie von B nach A.
       test('Symmetrische Entfernung', 'A → B gleich B → A', function () {
         const forward = app.calculateDistance(48.2390, 16.3777, 48.2341, 16.3712);
         const backward = app.calculateDistance(48.2341, 16.3712, 48.2390, 16.3777);
@@ -74,6 +83,7 @@
         return forward.toFixed(6) + ' km in beiden Richtungen';
       });
 
+      // Test 3: Von zwei Aufgaben muss wirklich die geografisch nähere gewählt werden.
       test('Nächste Aufgabe', 'Aufgabe 2, nicht die erste in der Liste', function () {
         const far = createTask(1, 48.25, 16.39, 'Geplant');
         const near = createTask(2, 48.2391, 16.3777, 'Geplant');
@@ -82,6 +92,7 @@
         return 'Aufgabe ' + nearest.task_id;
       });
 
+      // Test 4: Bei nur einer Aufgabe darf die Route auch nur genau diese eine Aufgabe enthalten.
       test('Route mit einer Aufgabe', 'genau Aufgabe 1; 10 min Dauer', function () {
         const task = createTask(1, 48.2391, 16.3777, 'Geplant');
         const route = app.optimizeRoute([task], 810);
@@ -91,6 +102,7 @@
         return 'Aufgabe 1; 10 min; Ende 13:40';
       });
 
+      // Test 5: Erledigte Aufgaben dürfen nicht mehr in einer neuen Route auftauchen.
       test('Erledigte Aufgaben ausschließen', 'nur offene Aufgabe 2', function () {
         const completed = createTask(1, 48.2390, 16.3777, 'Erledigt');
         const open = createTask(2, 48.24, 16.38, 'Geplant');
@@ -100,6 +112,7 @@
         return 'nur Aufgabe 2';
       });
 
+      // Test 6: Auch ohne Aufgaben darf die Funktion nicht abstürzen.
       test('Leere Aufgabenliste', '0 Stopps, 0 km, 0 min', function () {
         const route = app.optimizeRoute([], 810);
         assert(route.stops.length === 0 && route.totalDistance === 0 && route.totalDuration === 0
@@ -107,6 +120,7 @@
         return '0 Stopps, 0 km, 0 min; Startzeit unverändert';
       });
 
+      // Test 7: Kaputte oder unmögliche Koordinaten müssen sicher übersprungen werden.
       test('Ungültige Koordinaten', 'überspringen, gültige Aufgabe behalten; kein Absturz', function () {
         const invalid = [
           createTask(1, null, 16.38, 'Geplant'),
@@ -125,10 +139,12 @@
         return 'nur Aufgabe 7; ausschließlich ungültige Aufgaben ergeben eine leere Route';
       });
 
+      // Zum Schluss die Gesamtzahl der bestandenen und fehlgeschlagenen Tests anzeigen.
       document.getElementById('summary').textContent = (passed + failed) + ' Tests · '
         + passed + ' bestanden · ' + failed + ' fehlgeschlagen';
     }
 
+    // Jetzt starten wir die Tests direkt mit den echten Funktionen aus business-layer.js.
     try {
       runTests(CampusRouteBusiness);
     } catch (error) {
