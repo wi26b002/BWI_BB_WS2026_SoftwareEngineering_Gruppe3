@@ -1,9 +1,19 @@
 {
+    // Diese Datei ist nur eine kleine Hilfe für Visual Studio Code.
+    // Sie sagt VS Code, welche Seite beim Starten im Browser geöffnet werden soll.
     "configurations": [
         {
+            // Wir starten Google Chrome.
             "type": "chrome",
-            "name": "http://127.0.0.1:3000/index.html",
+
+            // Dieser Name wird in VS Code bei der Start-Auswahl angezeigt.
+            "name": "CampusRoute im Browser starten",
+
+            // "launch" bedeutet: VS Code soll einen neuen Browser öffnen.
             "request": "launch",
+
+            // Das ist die Adresse unseres lokalen CampusRoute-Servers.
+            // Der Server muss vorher z. B. über Live Server oder Python laufen.
             "url": "http://127.0.0.1:3000/index.html"
         }
     ]
