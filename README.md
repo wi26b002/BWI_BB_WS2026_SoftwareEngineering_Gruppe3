@@ -32,51 +32,69 @@ Der Benutzer kann:
 
 Es werden **kein Framework, kein npm, keine Datenbank und kein eigener Backend-Server** benötigt.
 
-## Die drei logischen Schichten
+## Drei-Ebenen-Architektur
 
-### 1. Darstellungsschicht
+CampusRoute ist bewusst in drei logische Ebenen aufgeteilt. Die Ebenen sind auch im Repository als eigene JavaScript-Dateien erkennbar.
 
-Die Darstellungsschicht ist das, was der Benutzer sieht und bedient.
+### 1. Presentation Layer
 
-Bei CampusRoute sind das:
+**Dateien:** `index.html` und `presentation-layer.js`
 
-- Aufgabenübersicht
-- Routenplaner
+Die Presentation Layer ist für alles zuständig, was der Benutzer sieht oder bedient:
+
+- Dashboard und Aufgabenübersicht
+- Suche, Filter und Sortierung
+- Formulare und Buttons
 - Detailansicht
-- Karte
-- Buttons, Auswahlfelder und Statusanzeigen
+- Routen-Ausgabe
+- Leaflet-Karte und Marker
+- DOM-Updates und Benutzerfeedback
 
-Sie befindet sich hauptsächlich in `index.html`.
+Sie ruft Funktionen der Business Layer auf und zeigt deren Ergebnisse an.
 
-### 2. Logikschicht
+### 2. Business Layer
 
-Die Logikschicht verarbeitet die Daten.
+**Datei:** `business-layer.js`
 
-Wichtige Funktionen sind zum Beispiel:
+Hier liegt die eigentliche Fachlogik:
 
-- `calculateDistance()` – berechnet eine direkte Entfernung mit der Haversine-Formel
-- `findNearestTask()` – sucht die nächste passende Aufgabe
-- `optimizeRoute()` – lokale Ersatzberechnung
-- `optimizeNetworkRoute()` – optimiert die Route mit echten Wegzeiten
-- `planRoute()` – verbindet Eingabe, Algorithmus und Ausgabe
+- Koordinaten prüfen
+- Haversine-Distanz berechnen
+- nächsten Task bestimmen
+- Greedy-/Nearest-Neighbour-Route bilden
+- Statusübergang Geplant -> Auf dem Weg -> Erledigt
+- Wegzeitmatrix auswerten
+- optimierte Stoppreihenfolge berechnen
+- Online-Routing in eine für die UI nutzbare Route umwandeln
 
-### 3. Datenschicht
+Die Business Layer verändert keine HTML-Elemente.
 
-Die Aufgabendaten liegen in:
+### 3. Data Layer
 
-`campus_tasks.json`
+**Dateien:** `data-layer.js` und `campus_tasks.json`
 
-Jede Aufgabe enthält zum Beispiel:
+Die Data Layer kümmert sich um Datenquellen und Speicherung:
 
-- ID
-- Titel
-- Beschreibung
-- Koordinaten
-- Kategorie
-- Priorität
-- Dauer
-- Status
-- optional eine Datei
+- Aufgaben aus `campus_tasks.json` laden
+- Status, Auswahl und eigene Aufgaben über `localStorage` speichern
+- gespeicherten Browserzustand wieder laden
+- Routingdaten vom Valhalla-Dienst abrufen und zwischenspeichern
+
+### Verbindung der Ebenen
+
+```text
+campus_tasks.json / localStorage / Valhalla
+                 |
+             Data Layer
+                 |
+           Business Layer
+                 |
+        Presentation Layer
+                 |
+              Benutzer
+```
+
+Die Presentation Layer greift nicht direkt auf die JSON-Datei oder Valhalla zu. Sie verwendet dafür die Business- bzw. Data-Layer-Funktionen.
 
 ## Wie funktioniert der Algorithmus?
 
@@ -193,8 +211,8 @@ Das erwartete Ergebnis ist:
 **Was macht CampusRoute?**  
 CampusRoute lädt Aufgaben aus JSON und plant eine sinnvolle Reihenfolge für mehrere Standorte.
 
-**Wo sind die drei Schichten?**  
-Darstellung = HTML/Tailwind/Leaflet, Logik = JavaScript-Algorithmen, Daten = `campus_tasks.json`.
+**Wo sind die drei Ebenen?**  
+Presentation Layer = `index.html` + `presentation-layer.js`; Business Layer = `business-layer.js`; Data Layer = `data-layer.js` + `campus_tasks.json`.
 
 **Gibt es ein Backend?**  
 Nein. Die Anwendung läuft vollständig im Browser. Der lokale Server liefert nur Dateien aus.
