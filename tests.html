@@ -14,14 +14,14 @@
 </head>
 <body>
   <h1>CampusRoute – Algorithmus-Tests</h1>
-  <p>Diese Tests prüfen die echten Funktionen aus index.html mit kleinen Testdaten.
+  <p>Diese Tests prüfen direkt die Funktionen der Business Layer mit kleinen Testdaten.
     Sie ändern weder die JSON-Datei noch die Aufgaben in der Anwendung.</p>
   <p>Über denselben lokalen HTTP-Server wie index.html öffnen. Zum Wiederholen die Seite neu laden.</p>
   <p id="summary" aria-live="polite">Tests werden geladen …</p>
   <ol id="results"></ol>
 
-  <!-- Die Anwendung laden, damit keine Kopien der Algorithmen getestet werden. -->
-  <iframe id="application" title="CampusRoute für Algorithmus-Tests" hidden></iframe>
+  <script src="./data-layer.js"></script>
+  <script src="./business-layer.js"></script>
   <script>
     function assert(condition, message) {
       if (!condition) throw new Error(message);
@@ -129,15 +129,11 @@
         + passed + ' bestanden · ' + failed + ' fehlgeschlagen';
     }
 
-    const frame = document.getElementById('application');
-    frame.onload = function () {
-      try {
-        runTests(frame.contentWindow);
-      } catch (error) {
-        document.getElementById('summary').textContent = 'Tests konnten nicht starten: ' + error.message;
-      }
-    };
-    frame.src = './index.html';
+    try {
+      runTests(CampusRouteBusiness);
+    } catch (error) {
+      document.getElementById('summary').textContent = 'Tests konnten nicht starten: ' + error.message;
+    }
   </script>
 </body>
 </html>
