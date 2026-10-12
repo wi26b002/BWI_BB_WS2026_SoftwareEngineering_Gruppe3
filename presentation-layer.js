@@ -1,14 +1,20 @@
-// PRESENTATION LAYER
-    // Diese Datei verarbeitet nur UI-Zustand, DOM, Leaflet-Karte und Benutzerinteraktionen.
-    // Fachlogik kommt aus business-layer.js; Datenzugriff/Persistenz aus data-layer.js.
+// PRESENTATION LAYER = ANZEIGE-EBENE
+    // Diese Datei kümmert sich um alles, was der Benutzer sieht oder anklickt.
+    // Rechnen und Entscheiden übernimmt business-layer.js.
+    // Laden und Speichern von Daten übernimmt data-layer.js.
+    // Hier liegen während der Laufzeit alle Aufgaben, damit wir sie auf der Seite anzeigen können.
     let globalTasks = [];
+    // In dieser Liste stehen nur die IDs der Aufgaben, die der Benutzer für die Route ausgewählt hat.
     let selectedTaskIds = [];
+    // Diese Variablen merken sich die Karte, Marker und die gezeichnete Route.
     let campusMap = null;
     let taskMarkersLayer = null;
     let routeLayer = null;
+    // Hier merken wir uns das letzte Routenergebnis und die aktuell geöffnete Aufgabe.
     let lastPlannedRoute = null;
     let currentDetailTaskId = null;
 
+    // Startwerte kommen aus den anderen Ebenen, damit wir sie nicht an mehreren Stellen doppelt eintragen.
     const storageKey = CampusRouteData.storageKey;
     const startLatitude = CampusRouteBusiness.defaultStart.latitude;
     const startLongitude = CampusRouteBusiness.defaultStart.longitude;
@@ -17,11 +23,13 @@
     let routeStartLabel = 'FH Technikum Wien';
 
     const travelModes = CampusRouteBusiness.travelModes;
+    // Diese kurzen Verweise machen Funktionen aus der Business Layer hier einfacher benutzbar.
     const priorityValue = CampusRouteBusiness.priorityValue;
     const hasValidCoordinates = CampusRouteBusiness.hasValidCoordinates;
     const calculateDistance = CampusRouteBusiness.calculateDistance;
     const findNearestTask = CampusRouteBusiness.findNearestTask;
 
+    // Diese kleine Brücken-Funktion startet die einfache Ersatz-Routenberechnung und übergibt dabei unseren aktuell gewählten Startpunkt.
     function optimizeRoute(tasks, startMinutes) {
       return CampusRouteBusiness.optimizeRoute(tasks, startMinutes, {
         latitude: routeStartLatitude,
@@ -29,6 +37,7 @@
       });
     }
 
+    // Diese Brücken-Funktion startet die genauere Online-Routenberechnung und gibt ebenfalls den aktuell gewählten Startpunkt mit.
     async function optimizeNetworkRoute(tasks, startMinutes, mode) {
       return CampusRouteBusiness.optimizeNetworkRoute(tasks, startMinutes, mode, {
         latitude: routeStartLatitude,
@@ -36,12 +45,14 @@
       });
     }
 
-    // Für Tests und die mündliche Erklärung bewusst sichtbar machen.
+    // Diese drei Funktionen machen wir zusätzlich am Browser-Fenster sichtbar.
+    // So kann tests.html genau dieselben Funktionen testen, die auch die App verwendet.
     window.calculateDistance = calculateDistance;
     window.findNearestTask = findNearestTask;
     window.optimizeRoute = optimizeRoute;
 
 
+    // Zeigt unten kurz eine kleine Meldung an, z. B. 'Aufgabe gespeichert'. Nach kurzer Zeit verschwindet sie wieder.
     function showToast(message) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -50,12 +61,14 @@
       showToast.timer = setTimeout(function () { toast.classList.add('hidden'); }, 2400);
     }
 
+    // Übersetzt die internen englischen Prioritäten in deutsche Wörter für die Oberfläche.
     function priorityLabel(priority) {
       if (priority === 'High') return 'Hoch';
       if (priority === 'Medium') return 'Mittel';
       return 'Niedrig';
     }
 
+    // Formatiert ein gespeichertes Datum so, dass es für Benutzer gut lesbar ist.
     function formatDeadline(deadline) {
       if (!deadline) return 'Keine Deadline';
       const date = new Date(deadline);
@@ -66,6 +79,7 @@
       }).format(date);
     }
 
+    // Prüft, ob eine Deadline schon vorbei ist, heute/morgen kommt oder noch weiter entfernt ist.
     function deadlineState(deadline) {
       if (!deadline) return { text: 'Keine Deadline', className: 'text-on-surface-variant' };
       const date = new Date(deadline);
@@ -77,6 +91,7 @@
       return { text: formatDeadline(deadline), className: 'text-on-surface-variant' };
     }
 
+    // Trägt beim ersten Öffnen automatisch die aktuelle Uhrzeit als Startzeit ein.
     function setDefaultStartTime() {
       const input = document.getElementById('start-time');
       if (!input || input.value) return;
@@ -84,6 +99,7 @@
       input.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
     }
 
+    // Schreibt das heutige Datum oben ins Dashboard.
     function updateTodayLabel() {
       const label = document.getElementById('today-label');
       if (!label) return;
@@ -92,6 +108,7 @@
       }).format(new Date()) + ' • FH Technikum Wien';
     }
 
+    // Sammelt den aktuellen Zustand der App und gibt ihn an die Data Layer zum Speichern weiter.
     function persistState() {
       const statuses = {};
       globalTasks.forEach(task => { statuses[task.task_id] = task.status; });
@@ -106,6 +123,7 @@
       });
     }
 
+    // Liest gespeicherte Browserdaten ein und stellt Status, Auswahl und eigene Aufgaben wieder her.
     function restoreState() {
       try {
         const state = CampusRouteData.loadState();
@@ -129,6 +147,7 @@
       } catch (_) {}
     }
 
+    // Setzt den Startpunkt wieder auf die FH Technikum Wien zurück.
     function resetStartPoint() {
       routeStartLatitude = startLatitude;
       routeStartLongitude = startLongitude;
@@ -143,12 +162,14 @@
       }
     }
 
+    // Reagiert darauf, ob der Benutzer die FH oder den eigenen Standort als Startpunkt auswählt.
     function changeStartMode(mode) {
       if (mode === 'current') useCurrentLocation();
       else resetStartPoint();
       persistState();
     }
 
+    // Fragt den Browser nach dem aktuellen Standort des Benutzers und verwendet ihn als Startpunkt.
     function useCurrentLocation() {
       const message = document.getElementById('location-message');
       if (!navigator.geolocation) {
@@ -179,6 +200,7 @@
       }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
     }
 
+    // Öffnet das Formular, mit dem eine neue eigene Aufgabe angelegt werden kann.
     function openTaskModal() {
       const modal = document.getElementById('task-modal');
       modal.classList.remove('hidden');
@@ -186,6 +208,7 @@
       document.getElementById('new-title').focus();
     }
 
+    // Schließt das Formular für neue Aufgaben und leert die Eingabefelder.
     function closeTaskModal() {
       const modal = document.getElementById('task-modal');
       modal.classList.add('hidden');
@@ -194,6 +217,7 @@
       document.getElementById('new-location-message').textContent = '';
     }
 
+    // Übernimmt den aktuellen Browser-Standort direkt in die Koordinatenfelder einer neuen Aufgabe.
     function fillTaskLocationFromBrowser() {
       const message = document.getElementById('new-location-message');
       if (!navigator.geolocation) {
@@ -210,6 +234,7 @@
       }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
     }
 
+    // Liest das Formular aus, prüft die Pflichtfelder und legt danach eine neue lokale Aufgabe an.
     function createTask(event) {
       event.preventDefault();
       const title = document.getElementById('new-title').value.trim();
@@ -255,6 +280,7 @@
       if (campusMap) refreshMapMarkers();
     }
 
+    // Löscht eine selbst angelegte Aufgabe nach einer Sicherheitsabfrage wieder.
     function deleteDetailTask() {
       if (!currentDetailTaskId) return;
       const task = globalTasks.find(task => task.task_id === currentDetailTaskId);
@@ -271,11 +297,13 @@
       switchScreen('errands');
     }
 
+    // Ändert den kleinen Informationstext über der Karte.
     function updateMapStatus(text) {
       const status = document.getElementById('map-status');
       if (status) status.textContent = text;
     }
 
+    // Erstellt die Leaflet-Karte nur dann, wenn sie noch nicht erstellt wurde.
     function ensureMap() {
       if (campusMap || typeof L === 'undefined') return;
 
@@ -293,6 +321,7 @@
       setTimeout(() => campusMap.invalidateSize(), 50);
     }
 
+    // Zeichnet die Marker aller Aufgaben neu auf die Karte und färbt sie passend zum Status.
     function refreshMapMarkers() {
       if (!campusMap || !taskMarkersLayer) return;
       taskMarkersLayer.clearLayers();
@@ -329,6 +358,7 @@
         + ' ausgewählt · ' + completed + ' erledigt');
     }
 
+    // Zeichnet die zuletzt berechnete Route als Linie auf die Karte.
     function drawRouteOnMap(route) {
       if (!campusMap || !routeLayer) return;
       routeLayer.clearLayers();
@@ -374,11 +404,13 @@
     }
 
 
+    // Liest aus dem Auswahlfeld, welches Verkehrsmittel der Benutzer gewählt hat.
     function getTravelMode() {
       const select = document.getElementById('travel-mode');
       return select && travelModes[select.value] ? select.value : 'pedestrian';
     }
 
+    // Schaltet den Routen-Button während einer Berechnung auf 'Bitte warten', damit nicht mehrfach geklickt wird.
     function setRouteLoading(isLoading) {
       const button = document.getElementById('optimize-route');
       if (!button) return;
@@ -386,7 +418,8 @@
       button.textContent = isLoading ? 'Route wird berechnet …' : 'Route optimieren';
     }
 
-    // Liest die Datei campus_tasks.json ein und rendert sie
+    // Start der App: Aufgaben laden und danach auf dem Bildschirm anzeigen.
+    // Lädt beim Start die Aufgaben über die Data Layer und baut danach die erste Ansicht auf.
     async function initDataset() {
       const container = document.getElementById('json-task-container');
       try {
@@ -402,6 +435,7 @@
       }
     }
 
+    // Zählt offene, ausgewählte, erledigte und gesamte Aufgaben und aktualisiert die Zahlen im Dashboard.
     function updateCounters() {
       const completed = globalTasks.filter(task => task.status === 'Erledigt').length;
       const open = globalTasks.length - completed;
@@ -415,6 +449,7 @@
       document.getElementById('completed-task-count').innerText = completed;
     }
 
+    // Sammelt alle vorhandenen Kategorien und trägt sie in das Kategorie-Auswahlfeld ein.
     function populateCategoryFilter() {
       const select = document.getElementById('filter-category');
       if (!select) return;
@@ -423,6 +458,7 @@
         + categories.map(category => '<option value="' + category + '">' + category + '</option>').join('');
     }
 
+    // Wendet Suche, Filter und Sortierung an und gibt nur die Aufgaben zurück, die gerade sichtbar sein sollen.
     function getVisibleTasks() {
       const search = (document.getElementById('task-search')?.value || '').trim().toLowerCase();
       const category = document.getElementById('filter-category')?.value || '';
@@ -448,6 +484,7 @@
       return tasks;
     }
 
+    // Wählt alle aktuell sichtbaren und noch offenen Aufgaben für die Routenplanung aus.
     function selectVisibleTasks() {
       const visible = getVisibleTasks().filter(task => task.status !== 'Erledigt' && hasValidCoordinates(task));
       visible.forEach(task => {
@@ -458,6 +495,7 @@
       renderTasks();
     }
 
+    // Entfernt alle Aufgaben aus der aktuellen Routenauswahl.
     function clearSelection() {
       selectedTaskIds = [];
       persistState();
@@ -465,6 +503,7 @@
       renderTasks();
     }
 
+    // Baut die sichtbaren Aufgaben-Karten neu auf. Diese Funktion bestimmt also, was in der Aufgabenliste zu sehen ist.
     function renderTasks() {
       updateCounters();
       const container = document.getElementById('json-task-container');
@@ -480,7 +519,7 @@
         if (campusMap) refreshMapMarkers();
         return;
       }
-      // Einzelobjekte als Karten rendern
+      // Für jede sichtbare Aufgabe wird jetzt eine eigene Karte aus HTML gebaut.
       container.innerHTML = visibleTasks.map((task, index) => {
         const validCoordinates = hasValidCoordinates(task);
         const distanceText = validCoordinates
@@ -562,12 +601,14 @@
       if (campusMap) refreshMapMarkers();
     }
 
+    // Entfernt ein altes Routenergebnis, wenn sich eine wichtige Eingabe geändert hat.
     function clearRouteResult() {
       document.getElementById('route-result').textContent = '';
       lastPlannedRoute = null;
       if (routeLayer) routeLayer.clearLayers();
     }
 
+    // Fügt genau eine Aufgabe zur Routenauswahl hinzu oder entfernt sie wieder.
     function selectTask(taskId, checked) {
       if (checked && !selectedTaskIds.includes(taskId)) selectedTaskIds.push(taskId);
       if (!checked) selectedTaskIds = selectedTaskIds.filter(id => id !== taskId);
@@ -577,6 +618,7 @@
       if (campusMap) refreshMapMarkers();
     }
 
+    // Setzt eine Aufgabe direkt auf 'Erledigt' und aktualisiert anschließend die Oberfläche.
     function completeTask(taskId) {
       const task = globalTasks.find(task => task.task_id === taskId);
       if (!task) return;
@@ -588,6 +630,7 @@
       if (currentDetailTaskId === taskId) showTaskDetail(taskId);
     }
 
+    // Schiebt eine Aufgabe einen Schritt weiter: von 'Geplant' zu 'Auf dem Weg' und danach zu 'Erledigt'.
     function advanceTaskStatus(taskId) {
       const task = globalTasks.find(task => task.task_id === taskId);
       if (!task || task.status === 'Erledigt') return;
@@ -600,6 +643,7 @@
       if (currentDetailTaskId === taskId) showTaskDetail(taskId);
     }
 
+    // Macht aus einer Minutenzahl eine Uhrzeit wie 13:40.
     function formatTime(minutes) {
       const days = Math.floor(minutes / 1440);
       const hours = Math.floor(minutes / 60) % 24;
@@ -608,6 +652,7 @@
         + (days > 0 ? ' (+' + days + ' Tag/e)' : '');
     }
 
+    // Das ist der Hauptablauf beim Klick auf 'Route optimieren': Eingaben prüfen, Business Layer aufrufen und Ergebnis anzeigen.
     async function planRoute() {
       const output = document.getElementById('route-result');
       const selectedTasks = globalTasks.filter(task => selectedTaskIds.includes(task.task_id));
@@ -631,7 +676,7 @@
         output.textContent = 'Keine planbare Aufgabe: Koordinaten fehlen oder sind ungültig.';
         return;
       }
-      // Ohne gültige Dauer wäre die angezeigte Zeitplanung irreführend.
+      // Wenn eine Aufgabendauer fehlt oder falsch ist, stoppen wir lieber statt eine falsche Uhrzeit zu zeigen.
       if (validTasks.some(task => !Number.isInteger(task.estimated_duration_min) || task.estimated_duration_min < 0)) {
         output.textContent = 'Bitte die Aufgabendauer prüfen: Sie muss eine ganze, nicht negative Minutenzahl sein.';
         return;
@@ -662,6 +707,7 @@
       }
     }
 
+    // Baut aus dem berechneten Routenergebnis die sichtbare Liste mit Stopps, Zeiten und Summen.
     function renderRoute(route, startMinutes, completedCount, invalidCount) {
       const output = document.getElementById('route-result');
       output.textContent = '';
@@ -753,7 +799,8 @@
       output.appendChild(mapButton);
     }
 
-    // Detail-Ansicht für einen angeklickten Task füllen
+    // Hier werden die Felder der Detailansicht mit der gewählten Aufgabe gefüllt.
+    // Füllt die Detailansicht mit den Daten der angeklickten Aufgabe.
     function showTaskDetail(taskId) {
       const task = globalTasks.find(t => t.task_id === taskId);
       if (!task) return;
@@ -789,6 +836,7 @@
       switchScreen('details');
     }
 
+    // Wählt die geöffnete Aufgabe für die Route aus oder entfernt sie wieder.
     function toggleDetailTaskSelection() {
       if (!currentDetailTaskId) return;
       const task = globalTasks.find(task => task.task_id === currentDetailTaskId);
@@ -798,12 +846,14 @@
       showTaskDetail(currentDetailTaskId);
     }
 
+    // Ändert den Status der Aufgabe, die gerade in der Detailansicht geöffnet ist.
     function advanceDetailTaskStatus() {
       if (!currentDetailTaskId) return;
       advanceTaskStatus(currentDetailTaskId);
     }
 
-    // Bildschirm-Umschalter
+    // Diese Funktion zeigt immer genau den gewünschten Bereich der App.
+    // Wechselt zwischen Aufgabenansicht, Detailansicht und Kartenansicht.
     function switchScreen(screenName) {
       document.querySelectorAll('.screen-container').forEach(el => el.classList.remove('active'));
       const targetScreen = document.getElementById('screen-' + screenName);
@@ -836,13 +886,15 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // Wenn jemand die Escape-Taste drückt, schließen wir das Aufgabenformular.
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape') closeTaskModal();
     });
 
+    // Klickt man neben das offene Formular auf den dunklen Hintergrund, wird es ebenfalls geschlossen.
     document.getElementById('task-modal').addEventListener('click', function (event) {
       if (event.target === this) closeTaskModal();
     });
 
-    // Beim Laden der Seite JSON einlesen
+    // Ganz am Ende starten wir die App und laden die Aufgaben.
     initDataset();
