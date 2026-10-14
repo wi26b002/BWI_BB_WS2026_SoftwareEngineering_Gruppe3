@@ -2,7 +2,7 @@
 
 ## Projektidee
 
-CampusRoute ist eine Web-Anwendung für Studierende. Die Anwendung lädt Aufgaben aus einer JSON-Datei, zeigt sie übersichtlich an und plant eine sinnvolle Reihenfolge für ausgewählte Aufgaben rund um die FH Technikum Wien.
+CampusRoute ist eine Web-Anwendung für Studierende. Die Anwendung lädt Aufgaben aus einer JSON-Datei, zeigt sie übersichtlich an und plant eine sinnvolle Reihenfolge für ausgewählte Aufgaben r[...]
 
 Der Benutzer kann:
 
@@ -145,7 +145,7 @@ Das bedeutet:
 - keine Benutzerkonten auf einem Server,
 - keine serverseitige Geschäftslogik.
 
-Statusänderungen und die aktuelle Routenauswahl werden mit `localStorage` im Browser gespeichert und bleiben daher auch nach einem Neuladen erhalten. Es gibt trotzdem keine zentrale Datenbank und keine Synchronisation zwischen verschiedenen Geräten.
+Statusänderungen und die aktuelle Routenauswahl werden mit `localStorage` im Browser gespeichert und bleiben daher auch nach einem Neuladen erhalten. Es gibt trotzdem keine zentrale Datenbank un[...]
 
 ## Anwendung starten
 
@@ -244,6 +244,7 @@ Für eine alltagstauglichere Nutzung wurden zusätzlich folgende Funktionen umge
 
 ## Eigene Aufgaben
 
-Über **„Neue Aufgabe“** können zusätzliche Aufgaben direkt in der Anwendung angelegt werden. Diese Aufgaben werden im Browser gespeichert und können wie die JSON-Aufgaben gefiltert, ausgewählt, geroutet und über den Status-Workflow bearbeitet werden.
+Über **„Neue Aufgabe“** können zusätzliche Aufgaben direkt in der Anwendung angelegt werden. Diese Aufgaben werden im Browser gespeichert und können wie die JSON-Aufgaben gefiltert, ausge[...]
 
-Für eigene Aufgaben werden Koordinaten benötigt. Sie können manuell eingegeben oder über **„Meine Position übernehmen“** aus dem Browser übernommen werden. Eigene Aufgaben lassen sich in der Detailansicht wieder löschen.
+Für eigene Aufgaben werden Koordinaten benötigt. Sie können manuell eingegeben oder über **„Meine Position übernehmen“** aus dem Browser übernommen werden. Eigene Aufgaben lassen sich in der[...]
+:)
