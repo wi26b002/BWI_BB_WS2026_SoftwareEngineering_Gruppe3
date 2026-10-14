@@ -2,7 +2,7 @@
 
 ## Projektidee
 
-CampusRoute ist eine Web-Anwendung für Studierende. Die Anwendung lädt Aufgaben aus einer JSON-Datei, zeigt sie übersichtlich an und plant eine sinnvolle Reihenfolge für ausgewählte Aufgaben r[...]
+CampusRoute ist eine Web-Anwendung für Studierende. Die Anwendung lädt Aufgaben aus einer JSON-Datei, zeigt sie übersichtlich an und plant eine sinnvolle Reihenfolge für ausgewählte Aufgaben rund[...] 
 
 Der Benutzer kann:
 
@@ -145,7 +145,7 @@ Das bedeutet:
 - keine Benutzerkonten auf einem Server,
 - keine serverseitige Geschäftslogik.
 
-Statusänderungen und die aktuelle Routenauswahl werden mit `localStorage` im Browser gespeichert und bleiben daher auch nach einem Neuladen erhalten. Es gibt trotzdem keine zentrale Datenbank un[...]
+Statusänderungen und die aktuelle Routenauswahl werden mit `localStorage` im Browser gespeichert und bleiben daher auch nach einem Neuladen erhalten. Es gibt trotzdem keine zentrale Datenbank und kei[...] 
 
 ## Anwendung starten
 
@@ -239,12 +239,11 @@ Für eine alltagstauglichere Nutzung wurden zusätzlich folgende Funktionen umge
 - aktueller Browser-Standort als optionaler Startpunkt,
 - lokale Speicherung von Status und Routenauswahl,
 - realistische Detailansicht mit Ort, Deadline, Priorität, Dauer und Status,
-- Status-Workflow von „Geplant“ über „Auf dem Weg“ bis „Erledigt“.
+- Status-Workflow von „Geplant“ über „Auf dem Weg“ bis „Erledigt".
 
 
 ## Eigene Aufgaben
 
-Über **„Neue Aufgabe“** können zusätzliche Aufgaben direkt in der Anwendung angelegt werden. Diese Aufgaben werden im Browser gespeichert und können wie die JSON-Aufgaben gefiltert, ausge[...]
+Über **„Neue Aufgabe“** können zusätzliche Aufgaben direkt in der Anwendung angelegt werden. Diese Aufgaben werden im Browser gespeichert und können wie die JSON-Aufgaben gefiltert, ausgewähl[...] 
 
 Für eigene Aufgaben werden Koordinaten benötigt. Sie können manuell eingegeben oder über **„Meine Position übernehmen“** aus dem Browser übernommen werden. Eigene Aufgaben lassen sich in der[...]
-:)
